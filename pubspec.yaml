@@ -1,0 +1,19 @@
+name: fnx_rest
+description: Set of REST tools
+version: 0.0.1
+author: Tomucha <email@example.com>
+#homepage: https://www.example.com
+
+environment:
+  sdk: '>=1.0.0 <2.0.0'
+
+dependencies:
+  logging: "^0.11.3"
+  browser: any
+  dart_to_js_script_rewriter: ^1.0.1
+
+dev_dependencies:
+  test: '>=0.12.0 <0.13.0'
+
+transformers:
+- dart_to_js_script_rewriter
