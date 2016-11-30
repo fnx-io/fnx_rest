@@ -16,6 +16,7 @@ class RestClient {
 
   Accepts _accepts;
   Produces _produces;
+  int _workingCount = 0;
 
   RestClient(HttpClient httpClient, RestClient parent, String url, {Map<String, String> headers}) {
     _parent = parent;
@@ -59,28 +60,32 @@ class RestClient {
 
   Future<RestResult> get({Map<String, String> headers}) {
     Map<String, String> allHeaders = _headersToSend(headers);
+    workStarted();
     Future<Response> resp = _httpClient.get(url, headers: allHeaders);
-    return processResponse(effAccepts, resp);
+    return handleResponse(resp);
   }
 
   Future<RestResult> post(dynamic data, {Map<String, String> headers}) {
     Map<String, String> headersToSend = _headersToSend(headers);
     _includeContentTypeHeader(headersToSend);
+    workStarted();
     Future<Response> resp = _httpClient.post(url, effProduces.serialize(data), headers: headersToSend);
-    return processResponse(effAccepts, resp);
+    return handleResponse(resp);
   }
 
   Future<RestResult> put(dynamic data, {Map<String, String> headers}) {
     Map<String, String> headersToSend = _headersToSend(headers);
     _includeContentTypeHeader(headersToSend);
+    workStarted();
     Future<Response> resp = _httpClient.put(url, effProduces.serialize(data), headers: headersToSend);
-    return processResponse(effAccepts, resp);
+    return handleResponse(resp);
   }
 
   Future<RestResult> delete({Map<String, String> headers}) {
     Map<String, String> allHeaders = _headersToSend(headers);
+    workStarted();
     Future<Response> resp = _httpClient.delete(url, headers: allHeaders);
-    return processResponse(effAccepts, resp);
+    return handleResponse(resp);
   }
 
   Map<String, String> _headersToSend(Map<String, String> headers) {
@@ -88,6 +93,9 @@ class RestClient {
     allHeaders.addAll(headers ?? {});
     _includeAcceptHeader(allHeaders);
     return allHeaders;
+  }
+  Future<RestResult> handleResponse(Future<Response> resp) {
+    return processResponse(effAccepts, resp.whenComplete(workCompleted));
   }
 
   static Future<RestResult> processResponse(Accepts accepts, Future<Response> resp) {
@@ -168,6 +176,18 @@ class RestClient {
 
   Serializer get serializer => effProduces?.serializer;
   Deserializer get deserializer => effAccepts?.deserializer;
+
+  bool get working => _workingCount > 0;
+
+  void workStarted() {
+    _workingCount++;
+    _parent?.workStarted();
+  }
+
+  void workCompleted() {
+    _workingCount--;
+    _parent?.workCompleted();
+  }
 
   Map<String, String> get headers {
     Map<String, String> res = {};

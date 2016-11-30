@@ -229,6 +229,91 @@ void main() {
       });
     });
   });
+
+  group("Working attribute", () {
+    test("is set when working", () async {
+      Response r = new Response("", 200);
+      Completer completer = new Completer();
+      Future<Response> fut = completer.future;
+
+      MockHttpClient httpClient = successReturningHttpClient(new MockHttpClient(), respFactory: () => fut);
+      RestClient client = new RestClient(httpClient, null, "/");
+      Future<RestResult> resp = client.get();
+      expect(client.working, isTrue);
+      completer.complete(r);
+      await resp;
+      expect(client.working, isFalse);
+    });
+
+    test("is set when working", () async {
+      Response r1 = new Response("", 200);
+      Response r2 = new Response("", 200);
+      Completer completer1 = new Completer();
+      Completer completer2 = new Completer();
+      Future<Response> fut1 = completer1.future;
+      Future<Response> fut2 = completer2.future;
+
+      HttpClient httpClient = new MockHttpClient();
+      when(httpClient.get(any, headers: any)).thenReturn(fut1);
+      when(httpClient.delete(any, headers: any)).thenReturn(fut2);
+
+      RestClient client = new RestClient(httpClient, null, "/");
+      Future<RestResult> resp1 = client.get();
+      Future<RestResult> resp2 = client.delete();
+
+      expect(client.working, isTrue);
+      completer1.complete(r1);
+      await resp1;
+
+      expect(client.working, isTrue);
+      completer2.complete(r2);
+      await resp2;
+
+      expect(client.working, isFalse);
+    });
+
+    test("should return true if any of parent's child are working", () async {
+      Response r1 = new Response("", 200);
+      Response r2 = new Response("", 200);
+      Completer completer1 = new Completer();
+      Completer completer2 = new Completer();
+      Future<Response> fut1 = completer1.future;
+      Future<Response> fut2 = completer2.future;
+
+      HttpClient httpClient = new MockHttpClient();
+      when(httpClient.get(any, headers: any)).thenReturn(fut1);
+      when(httpClient.delete(any, headers: any)).thenReturn(fut2);
+
+      RestClient client = new RestClient(httpClient, null, "/");
+      RestClient ch1 = client.child("/something");
+      RestClient ch2 = ch1.child("/somewhere");
+
+      Future<RestResult> resp1 = ch1.get();
+      Future<RestResult> resp2 = ch2.delete();
+
+      expect(ch2.working, isTrue);
+      expect(ch1.working, isTrue);
+      expect(client.working, isTrue);
+
+      // intermediate completes
+      // everyone should be still working, since grand child is still working
+      completer1.complete(r1);
+      await resp1;
+
+      expect(ch2.working, isTrue);
+      expect(ch1.working, isTrue);
+      expect(client.working, isTrue);
+
+      // grandchild completes
+      // everyone should be finished
+      completer2.complete(r2);
+      await resp2;
+
+      expect(ch2.working, isFalse);
+      expect(ch1.working, isFalse);
+      expect(client.working, isFalse);
+    });
+  });
 }
 
 Future<Response> newResponse({int status, String body, List<int> binaryBody}) {
