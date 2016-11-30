@@ -1,4 +1,3 @@
-//import 'package:http/browser_client.dart' as http;
 import 'dart:async';
 import 'dart:convert';
 
@@ -7,7 +6,7 @@ import 'package:http/src/response.dart';
 
 class RestClient {
 
-  Engine _engine;
+  HttpClient _httpClient;
 
   RestClient _parent;
   String _url;
@@ -18,14 +17,12 @@ class RestClient {
   Accepts _accepts;
   Produces _produces;
 
-  RestClient(RestClient parent, String url, {Map<String, String> headers}): this.withEngine(null, parent, url, headers: headers);
-
-  RestClient.withEngine(Engine engine, RestClient parent, String url, {Map<String, String> headers}) {
+  RestClient(HttpClient httpClient, RestClient parent, String url, {Map<String, String> headers}) {
     _parent = parent;
     UrlParseResult parsedUrl = parseUrl(url);
     _url = parsedUrl.url;
     _params = parsedUrl.params;
-    _engine = engine;
+    _httpClient = httpClient;
     if (headers == null) headers = {};
     _headers = headers;
     accepts('application/json', defaultJsonDeserializer);
@@ -33,7 +30,7 @@ class RestClient {
   }
 
   RestClient child(String urlPart, {Map<String, String> headers}) {
-    return new RestClient.withEngine(_engine, this, urlPart, headers: headers);
+    return new RestClient(_httpClient, this, urlPart, headers: headers);
   }
 
   RestClient accepts(String mime, Deserializer deserializer) {
@@ -62,27 +59,27 @@ class RestClient {
 
   Future<RestResult> get({Map<String, String> headers}) {
     Map<String, String> allHeaders = _headersToSend(headers);
-    Future<Response> resp = _engine.get(url, headers: allHeaders);
+    Future<Response> resp = _httpClient.get(url, headers: allHeaders);
     return processResponse(effAccepts, resp);
   }
 
   Future<RestResult> post(dynamic data, {Map<String, String> headers}) {
     Map<String, String> headersToSend = _headersToSend(headers);
     _includeContentTypeHeader(headersToSend);
-    Future<Response> resp = _engine.post(url, effProduces.serialize(data), headers: headersToSend);
+    Future<Response> resp = _httpClient.post(url, effProduces.serialize(data), headers: headersToSend);
     return processResponse(effAccepts, resp);
   }
 
   Future<RestResult> put(dynamic data, {Map<String, String> headers}) {
     Map<String, String> headersToSend = _headersToSend(headers);
     _includeContentTypeHeader(headersToSend);
-    Future<Response> resp = _engine.put(url, effProduces.serialize(data), headers: headersToSend);
+    Future<Response> resp = _httpClient.put(url, effProduces.serialize(data), headers: headersToSend);
     return processResponse(effAccepts, resp);
   }
 
   Future<RestResult> delete({Map<String, String> headers}) {
     Map<String, String> allHeaders = _headersToSend(headers);
-    Future<Response> resp = _engine.delete(url, headers: allHeaders);
+    Future<Response> resp = _httpClient.delete(url, headers: allHeaders);
     return processResponse(effAccepts, resp);
   }
 
@@ -247,13 +244,12 @@ class RestClient {
   }
 }
 
-abstract class Engine {
+abstract class HttpClient {
 
   Future<Response> get(String url, {Map<String, String> headers});
   Future<Response> post(String url, dynamic data, {Map<String, String> headers});
   Future<Response> put(String url, dynamic data, {Map<String, String> headers});
   Future<Response> delete(String url, {Map<String, String> headers});
-  //http.BrowserClient client = new http.BrowserClient()..withCredentials = true;
 }
 
 typedef dynamic Serializer(dynamic payload);
