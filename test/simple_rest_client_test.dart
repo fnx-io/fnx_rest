@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:http/src/response.dart';
 import 'package:test/test.dart';
-import 'package:fnx_rest/fnx_rest.dart';
+import 'package:fnx_rest/src/rest_client.dart';
 import 'package:mockito/mockito.dart';
 
 class MockHttpClient extends Mock implements HttpClient {}
