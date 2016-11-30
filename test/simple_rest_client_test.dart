@@ -313,6 +313,28 @@ void main() {
       expect(ch1.working, isFalse);
       expect(client.working, isFalse);
     });
+
+    test("behaves correctly even when http call fails", () async {
+      Completer completer = new Completer();
+      Future<Response> fut = completer.future;
+
+      HttpClient httpClient = new MockHttpClient();
+      when(httpClient.get(any, headers: any)).thenReturn(fut);
+
+      RestClient client = new RestClient(httpClient, null, "/");
+
+      Future<RestResult> response = client.get();
+      expect(client.working, isTrue);
+
+      completer.completeError("Call failed");
+      try {
+        await response;
+        fail("response should fail");
+      } catch (exception) {
+        expect(exception, isNotNull);
+      }
+      expect(client.working, isFalse);
+    });
   });
 }
 
