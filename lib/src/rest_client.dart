@@ -204,6 +204,16 @@ class RestClient {
     return res;
   }
 
+  RestClient setHeader(String name, String value) {
+    _headers[name] = value;
+    return this;
+  }
+
+  RestClient removeHeader(String name) {
+    _headers.remove(name);
+    return this;
+  }
+
   Map<String, dynamic /* String or List<String>*/> get params {
     Map<String, dynamic> res = {};
     if (_parent != null) {
