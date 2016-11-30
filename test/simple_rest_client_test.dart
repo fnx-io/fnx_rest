@@ -38,17 +38,83 @@ void main() {
     });
   });
 
+  group("Parameters", () {
+    test("are rememebered", () {
+      RestClient rc = new RestClient(null, null);
+      rc.setParam('a', 'b');
+      rc.setParams('c', ['1', '2']);
+
+      expect(rc.getParam('a'), equals('b'));
+      expect(rc.getParams('c'), equals(['1', '2']));
+    });
+
+    test("are type checked (sort-of)", () {
+      RestClient rc = new RestClient(null, null);
+      rc.setParams('a', ['1', '2']);
+
+      expect(() => rc.getParam('a'), throwsA(contains("Invalid parameter type")));
+    });
+
+    test("if single param accessed by getParams, it is converted to list automatically", () {
+      RestClient rc = new RestClient(null, null);
+      rc.setParam('a', 'b');
+      expect(rc.getParams('a'), equals(['b']));
+    });
+
+    test("cannot be modified directly", () {
+      RestClient rc = new RestClient(null, null);
+      rc.setParams('a', ['b', 'c']);
+      var params = rc.getParams('a');
+      params.add('d');
+      expect(rc.getParams('a'), equals(['b', 'c']));
+    });
+
+    test("are hierarchical", () {
+      RestClient rc = new RestClient(null, null);
+      rc.setParam('a', 'b');
+      RestClient ch = rc.child("/a");
+      ch.setParam('c', 'd');
+      expect(ch.getParam('a'), equals('b'));
+      expect(ch.getParam('c'), equals('d'));
+    });
+
+    test("child params do not overwrite parent params", () {
+      RestClient rc = new RestClient(null, null);
+      rc.setParam('a', 'b');
+      RestClient ch = rc.child("/a");
+      ch.setParam('a', '1');
+      expect(rc.getParam('a'), equals('b'));
+      expect(ch.getParam('a'), equals('1'));
+    });
+
+    test("are seeded from the url", () {
+      RestClient rc = new RestClient(null, "/something?is=wrong&1=2");
+      expect(rc.getParam('is'), equals('wrong'));
+      expect(rc.getParam('1'), equals('2'));
+      expect(rc.url, equals('/something'));
+    });
+
+    test("for child urls are also seeded", () {
+      RestClient rc = new RestClient(null, "/something?is=wrong&1=2");
+      RestClient child = rc.child("/somewhere?is=good&becomes=better");
+      expect(child.getParam('is'), equals('good'));
+      expect(child.getParam('becomes'), equals('better'));
+      expect(child.getParam('1'), equals('2'));
+      expect(child.url, equals('/something/somewhere'));
+    });
+  });
+
   group("When parsing responses", () {
     Future<RestResult> processResponse(Deserializer d, Future<Response> resp) {
       return RestClient.processResponse(d, resp);
     }
     Deserializer d = (dynamic v) => v is String ? int.parse(v) : -1;
     group("and deserializer is called", () {
-      test("then the result is successful", () {
+      test("when the result is successful", () {
         Future<dynamic> r = processResponse(d, newResponse(200, "1")).then((RestResult r) => r.data);
         expect(r, completion(equals(1)));
       });
-      test("then the result is failure", () {
+      test("when the result is failure", () {
         Future<dynamic> r = processResponse(d, newResponse(401, "1")).then((RestResult r) => r.data);
         expect(r, completion(equals(1)));
       });

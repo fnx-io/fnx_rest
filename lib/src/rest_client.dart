@@ -17,12 +17,15 @@ class RestClient {
   String _producesMime;
   Deserializer _deserializer;
   Serializer _serializer;
+  Map<String, dynamic /* String or List<String> */> _params = {};
 
   RestClient(RestClient parent, String url, {Map<String, String> headers}): this.withEngine(null, parent, url, headers: headers);
 
   RestClient.withEngine(Engine engine, RestClient parent, String url, {Map<String, String> headers}) {
     _parent = parent;
-    _url = cleanupUrl(url);
+    UrlParseResult parsedUrl = parseUrl(url);
+    _url = parsedUrl.url;
+    _params = parsedUrl.params;
     _engine = engine;
     if (headers == null) headers = {};
     _headers = headers;
@@ -102,11 +105,22 @@ class RestClient {
 
   static RegExp SLASH_CHAR = new RegExp(r'\/');
 
-  static String cleanupUrl(String url) {
+  static UrlParseResult parseUrl(String url) {
     if (url == null || url.isEmpty){
-      return '';
+
+      return new UrlParseResult('', {});
     } else {
-      return url;
+      Uri parsed = Uri.parse(url);
+      Map<String, dynamic> parsedParams = {};
+      // split the parameters from the url given
+      var queryParameters = parsed.queryParameters;
+      if (queryParameters != null) parsedParams.addAll(queryParameters);
+
+      // we are only interested into plain url without query parameters (we store these separately)
+      Uri plain = parsed.replace(queryParameters: {}, query: null);
+      String plainUrl = plain.toString();
+      if (plainUrl.endsWith('?')) plainUrl = plainUrl.substring(0, plainUrl.length - 1);
+      return new UrlParseResult(plainUrl, parsedParams);
     }
   }
 
@@ -161,6 +175,65 @@ class RestClient {
     }
 
     return res;
+  }
+
+  Map<String, dynamic /* String or List<String>*/> get params {
+    Map<String, dynamic> res = {};
+    if (_parent != null) {
+      res.addAll(_parent.params ?? {});
+    }
+    res.addAll(_params ?? {});
+    return res;
+  }
+
+  RestClient setParam(String name, String value) {
+    return _setParam(name, value);
+  }
+
+  RestClient setParams(String name, List<String> value) {
+    return _setParam(name, value);
+  }
+
+  String getParam(String name) {
+    dynamic res = _getParam(name);
+    if (res is String) {
+      return res;
+    } else if (res == null) {
+      return null;
+    } else {
+      throw "Invalid parameter type! \"$name\" should be of type String. Was $res";
+    }
+  }
+
+  List<String> getParams(String name) {
+    dynamic res = _getParam(name);
+
+    if (res is String) {
+      return [res];
+    } else if (res is List<String>) {
+      List<String> all = [];
+      all.addAll(res);
+      return all;
+    } else if (res == null ){
+      return null;
+    } else {
+      throw "Invalid parameter type! Only String an List<String> are supported ${res}";
+    }
+  }
+
+  dynamic _getParam(String name) {
+    Map<String, dynamic> allParams = params;
+    return allParams[name];
+  }
+
+  RestClient _setParam(String name, /* String or List<String>*/ dynamic value) {
+    if (value == null) {
+      _params.remove(name);
+    } else {
+      _params[name] = value;
+    }
+
+    return this;
   }
 }
 
@@ -235,4 +308,16 @@ class HttpException {
   var data;
 
   HttpException(this.httpStatus, [this.data]);
+}
+
+class UrlParseResult {
+  String url;
+  Map<String, dynamic> _params = {};
+
+  UrlParseResult(this.url, Map<String, dynamic> argParams) {
+    if (argParams == null) argParams = {};
+    this._params = argParams;
+  }
+
+  Map<String, dynamic> get params => _params;
 }
