@@ -61,7 +61,7 @@ class RestClient {
   Future<RestResult> get({Map<String, String> headers}) {
     Map<String, String> allHeaders = _headersToSend(headers);
     workStarted();
-    Future<Response> resp = _httpClient.get(url, headers: allHeaders);
+    Future<Response> resp = _httpClient.get(renderUrl(url, params), headers: allHeaders);
     return handleResponse(resp);
   }
 
@@ -69,7 +69,7 @@ class RestClient {
     Map<String, String> headersToSend = _headersToSend(headers);
     _includeContentTypeHeader(headersToSend);
     workStarted();
-    Future<Response> resp = _httpClient.post(url, effProduces.serialize(data), headers: headersToSend);
+    Future<Response> resp = _httpClient.post(renderUrl(url, params), effProduces.serialize(data), headers: headersToSend);
     return handleResponse(resp);
   }
 
@@ -77,14 +77,14 @@ class RestClient {
     Map<String, String> headersToSend = _headersToSend(headers);
     _includeContentTypeHeader(headersToSend);
     workStarted();
-    Future<Response> resp = _httpClient.put(url, effProduces.serialize(data), headers: headersToSend);
+    Future<Response> resp = _httpClient.put(renderUrl(url, params), effProduces.serialize(data), headers: headersToSend);
     return handleResponse(resp);
   }
 
   Future<RestResult> delete({Map<String, String> headers}) {
     Map<String, String> allHeaders = _headersToSend(headers);
     workStarted();
-    Future<Response> resp = _httpClient.delete(url, headers: allHeaders);
+    Future<Response> resp = _httpClient.delete(renderUrl(url, params), headers: allHeaders);
     return handleResponse(resp);
   }
 
@@ -150,6 +150,12 @@ class RestClient {
     }
 
     return "$base$part";
+  }
+
+  static String renderUrl(String template, Map<String, dynamic> params) {
+    Uri parsed = Uri.parse(template);
+    if (params.isEmpty) params = null;
+    return parsed.replace(queryParameters: params).toString();
   }
 
   Map<String, String> _includeAcceptHeader(Map<String, String> headers) {

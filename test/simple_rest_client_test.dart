@@ -104,6 +104,15 @@ void main() {
       expect(child.getParam('1'), equals('2'));
       expect(child.url, equals('/something/somewhere'));
     });
+
+    test("are rendered in the request URL", () {
+      HttpClient client = successReturningHttpClient(new MockHttpClient());
+      RestClient rc = new RestClient(client, null, "/something?is=wrong&1=2");
+      rc.setParam("3", "4");
+
+      rc.get();
+      verify(client.get("/something?is=wrong&1=2&3=4", headers: any));
+    });
   });
 
   group("When parsing responses", () {
