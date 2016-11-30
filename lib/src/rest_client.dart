@@ -13,11 +13,10 @@ class RestClient {
   String _url;
 
   Map<String, String> _headers = {};
-  String _acceptsMime;
-  String _producesMime;
-  Deserializer _deserializer;
-  Serializer _serializer;
   Map<String, dynamic /* String or List<String> */> _params = {};
+
+  Accepts _accepts;
+  Produces _produces;
 
   RestClient(RestClient parent, String url, {Map<String, String> headers}): this.withEngine(null, parent, url, headers: headers);
 
@@ -38,15 +37,25 @@ class RestClient {
   }
 
   RestClient accepts(String mime, Deserializer deserializer) {
-    this._acceptsMime = mime;
-    this._deserializer = deserializer;
+    this._accepts = new Accepts.nonbinary(mime, deserializer);
+
+    return this;
+  }
+
+  RestClient acceptsBinary(String mime) {
+    this._accepts = new Accepts(mime, null, true);
+
+    return this;
+  }
+
+  RestClient producesBinary(String mime) {
+    this._produces = new Produces(mime, null, true);
 
     return this;
   }
 
   RestClient produces(String mime, Serializer serializer) {
-    this._producesMime = mime;
-    this._serializer = serializer;
+    this._produces = new Produces.nonbinary(mime, serializer);
 
     return this;
   }
@@ -54,27 +63,27 @@ class RestClient {
   Future<RestResult> get({Map<String, String> headers}) {
     Map<String, String> allHeaders = _headersToSend(headers);
     Future<Response> resp = _engine.get(url, headers: allHeaders);
-    return processResponse(deserializer, resp);
+    return processResponse(effAccepts, resp);
   }
 
   Future<RestResult> post(dynamic data, {Map<String, String> headers}) {
     Map<String, String> headersToSend = _headersToSend(headers);
     _includeContentTypeHeader(headersToSend);
-    Future<Response> resp = _engine.post(url, serializer(data), headers: headersToSend);
-    return processResponse(deserializer, resp);
+    Future<Response> resp = _engine.post(url, effProduces.serialize(data), headers: headersToSend);
+    return processResponse(effAccepts, resp);
   }
 
   Future<RestResult> put(dynamic data, {Map<String, String> headers}) {
     Map<String, String> headersToSend = _headersToSend(headers);
     _includeContentTypeHeader(headersToSend);
-    Future<Response> resp = _engine.put(url, serializer(data), headers: headersToSend);
-    return processResponse(deserializer, resp);
+    Future<Response> resp = _engine.put(url, effProduces.serialize(data), headers: headersToSend);
+    return processResponse(effAccepts, resp);
   }
 
   Future<RestResult> delete({Map<String, String> headers}) {
     Map<String, String> allHeaders = _headersToSend(headers);
     Future<Response> resp = _engine.delete(url, headers: allHeaders);
-    return processResponse(deserializer, resp);
+    return processResponse(effAccepts, resp);
   }
 
   Map<String, String> _headersToSend(Map<String, String> headers) {
@@ -84,12 +93,10 @@ class RestClient {
     return allHeaders;
   }
 
-  static Future<RestResult> processResponse(deserializer, Future<Response> resp) {
+  static Future<RestResult> processResponse(Accepts accepts, Future<Response> resp) {
     return resp.then((Response r) {
       dynamic data = null;
-      if (r.body != null && !r.body.isEmpty) {
-        data = deserializer(r.body);
-      }
+      data = accepts.deserialize(r);
       RestResult result = new RestResult(r.statusCode, data);
       if (result.error) {
         result.throwError();
@@ -156,11 +163,14 @@ class RestClient {
     return headers;
   }
 
-  String get producesMime => _producesMime != null ? _producesMime: _parent?.producesMime;
-  String get acceptsMime => _acceptsMime != null ? _acceptsMime: _parent?.acceptsMime;
+  Accepts get effAccepts => _accepts != null ? _accepts : _parent?._accepts;
+  Produces get effProduces => _produces != null ? _produces : _parent?._produces;
 
-  Serializer get serializer => _serializer != null ? _serializer: _parent?.serializer;
-  Deserializer get deserializer => _deserializer != null ? _deserializer: _parent?.deserializer;
+  String get producesMime => effProduces?.mime;
+  String get acceptsMime => effAccepts?.mime;
+
+  Serializer get serializer => effProduces?.serializer;
+  Deserializer get deserializer => effAccepts?.deserializer;
 
   Map<String, String> get headers {
     Map<String, String> res = {};
@@ -247,7 +257,7 @@ abstract class Engine {
 }
 
 typedef dynamic Serializer(dynamic payload);
-typedef dynamic Deserializer(dynamic payload);
+typedef dynamic Deserializer(String payload);
 
 RegExp microRemoval = new RegExp(r'\.[0-9]{0,6}');
 
@@ -259,11 +269,15 @@ Object toJsonEncodable(Object value) {
   }
 }
 
-Deserializer defaultJsonDeserializer = (dynamic payload) {
+Deserializer defaultJsonDeserializer = (String payload) {
   if (payload == null) {
     return null;
   } else  if (payload is String) {
-    return JSON.decode(payload);
+    if (payload.isEmpty) {
+      return null;
+    } else {
+      return JSON.decode(payload);
+    }
   } else {
     throw new RestClientException("Payload should be string if parsed as JSON");
   }
@@ -320,4 +334,39 @@ class UrlParseResult {
   }
 
   Map<String, dynamic> get params => _params;
+}
+
+class Accepts {
+  final String mime;
+  final Deserializer deserializer;
+  final bool binary;
+
+  Accepts.nonbinary(String mime, Deserializer deserializer): this(mime, deserializer, false);
+  Accepts(this.mime, this.deserializer, this.binary);
+
+  dynamic deserialize(Response resp) {
+    if (binary) {
+      return resp.bodyBytes;
+    }
+    dynamic body = resp.body;
+    if (body == null) return null;
+    return deserializer(resp.body);
+  }
+}
+
+class Produces {
+  final String mime;
+  final Serializer serializer;
+  final bool binary;
+
+  Produces.nonbinary(String mime, Serializer serializer): this(mime, serializer, false);
+  Produces(this.mime, this.serializer, this.binary);
+
+  dynamic serialize(dynamic payload) {
+    if (binary) {
+      return payload;
+    } else {
+      return serializer(payload);
+    }
+  }
 }

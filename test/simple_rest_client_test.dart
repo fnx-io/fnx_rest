@@ -6,6 +6,8 @@ import 'package:mockito/mockito.dart';
 
 class MockEngine extends Mock implements Engine {}
 
+List<int> binaryData = [0x48, 0x65, 0x6C, 0x6C, 0x6F, 0x20, 0x77, 0x6F, 0x72, 0x6C, 0x64, 0x21];
+
 void main() {
   RestClient r = new RestClient(null, "a.c/", headers: {'a': 'a', 'b': 'b'});
   group("RestClient URL", () {
@@ -106,21 +108,21 @@ void main() {
 
   group("When parsing responses", () {
     Future<RestResult> processResponse(Deserializer d, Future<Response> resp) {
-      return RestClient.processResponse(d, resp);
+      return RestClient.processResponse(new Accepts("some/thing", d, false), resp);
     }
     Deserializer d = (dynamic v) => v is String ? int.parse(v) : -1;
     group("and deserializer is called", () {
       test("when the result is successful", () {
-        Future<dynamic> r = processResponse(d, newResponse(200, "1")).then((RestResult r) => r.data);
+        Future<dynamic> r = processResponse(d, newResponse(status: 200, body: "1")).then((RestResult r) => r.data);
         expect(r, completion(equals(1)));
       });
       test("when the result is failure", () {
-        Future<dynamic> r = processResponse(d, newResponse(401, "1")).then((RestResult r) => r.data);
+        Future<dynamic> r = processResponse(d, newResponse(status: 401, body: "1")).then((RestResult r) => r.data);
         expect(r, completion(equals(1)));
       });
     });
     test("and the status is > 500, it throws HttpException", () {
-      Future<RestResult> r = processResponse(d, newResponse(500, "1"));
+      Future<RestResult> r = processResponse(d, newResponse(status: 500, body: "1"));
       expect(r, throwsA(equals(new isInstanceOf<HttpException>())));
     });
   });
@@ -162,20 +164,93 @@ void main() {
       verify(engine.delete('a.c/', headers: {'a': 'a', 'b': 'b', 'Accept': 'application/json'}));
     });
   });
+
+  group("RestClient supports binary content-types", () {
+    test("GET can passthrough binary response", () {
+      MockEngine engine = successReturningEngine(new MockEngine(), respFactory: () => newResponse(status: 200, binaryBody: binaryData));
+      RestClient rc = new RestClient.withEngine(engine, null, "/");
+      rc.acceptsBinary("image/png");
+      Future<RestResult> futRr = rc.get();
+      Future<dynamic> rr = futRr.then((RestResult rr) => rr.data);
+      verify(engine.get("/", headers: any));
+      expect(rr, completion(equals(binaryData)));
+    });
+    group("POST", () {
+      test("can make binary requests", () {
+        MockEngine engine = successReturningEngine(new MockEngine(), respFactory: () => newResponse(status: 200, binaryBody: binaryData));
+        RestClient rc = new RestClient.withEngine(engine, null, "/");
+        rc.producesBinary("image/png");
+        rc.acceptsBinary("image/png");
+        Future<RestResult> post = rc.post(binaryData);
+        verify(engine.post("/", binaryData, headers: any));
+      });
+
+      test("can receive binary responses", () {
+        MockEngine engine = successReturningEngine(new MockEngine(), respFactory: () => newResponse(status: 200, binaryBody: binaryData));
+        RestClient rc = new RestClient.withEngine(engine, null, "/");
+        rc.producesBinary("image/png");
+        rc.acceptsBinary("image/png");
+
+        Future<dynamic> rr = rc.post(binaryData).then((RestResult rr) => rr.data);
+        expect(rr, completion(equals(binaryData)));
+      });
+    });
+
+    group("PUT", () {
+      test("can make binary requests", () {
+        MockEngine engine = successReturningEngine(new MockEngine(), respFactory: () => newResponse(status: 200, binaryBody: binaryData));
+        RestClient rc = new RestClient.withEngine(engine, null, "/");
+        rc.producesBinary("image/png");
+        rc.acceptsBinary("image/png");
+        Future<RestResult> r = rc.put(binaryData);
+        verify(engine.put("/", binaryData, headers: any));
+      });
+
+      test("can receive binary responses", () {
+        MockEngine engine = successReturningEngine(new MockEngine(), respFactory: () => newResponse(status: 200, binaryBody: binaryData));
+        RestClient rc = new RestClient.withEngine(engine, null, "/");
+        rc.producesBinary("image/png");
+        rc.acceptsBinary("image/png");
+
+        Future<dynamic> rr = rc.put(binaryData).then((RestResult rr) => rr.data);
+        expect(rr, completion(equals(binaryData)));
+      });
+    });
+
+    group("DELETE", () {
+      test("can receive binary responses", () {
+        MockEngine engine = successReturningEngine(new MockEngine(), respFactory: () => newResponse(status: 200, binaryBody: binaryData));
+        RestClient rc = new RestClient.withEngine(engine, null, "/");
+        rc.producesBinary("image/png");
+        rc.acceptsBinary("image/png");
+
+        Future<dynamic> rr = rc.delete().then((RestResult rr) => rr.data);
+        expect(rr, completion(equals(binaryData)));
+      });
+    });
+  });
 }
 
-dynamic newResponse([int status, String body]) {
+Future<Response> newResponse({int status, String body, List<int> binaryBody}) {
   if (status == null) status = 200;
-  if (body == null) body = "";
-  Response r = new Response(body, status);
-  return new Future.sync(() => r);
+  Response r;
+  if (binaryBody != null) {
+    r = new Response.bytes(binaryBody, status);
+  } else {
+    if (body == null) body = "";
+    r = new Response(body, status);
+  }
+  return new Future.value(r);
 }
 
-MockEngine successReturningEngine(Engine engine) {
-  when(engine.get(any, headers: any)).thenReturn(newResponse());
-  when(engine.delete(any, headers: any)).thenReturn(newResponse());
-  when(engine.post(any, any, headers: any)).thenReturn(newResponse());
-  when(engine.put(any, any, headers: any)).thenReturn(newResponse());
-  when(engine.put(any, any, headers: any)).thenReturn(newResponse());
+MockEngine successReturningEngine(Engine engine, {ResponseFactory respFactory}) {
+  if (respFactory == null) respFactory = newResponse;
+  when(engine.get(any, headers: any)).thenReturn(respFactory());
+  when(engine.delete(any, headers: any)).thenReturn(respFactory());
+  when(engine.post(any, any, headers: any)).thenReturn(respFactory());
+  when(engine.put(any, any, headers: any)).thenReturn(respFactory());
+  when(engine.put(any, any, headers: any)).thenReturn(respFactory());
   return engine;
 }
+
+typedef Future<Response> ResponseFactory();
