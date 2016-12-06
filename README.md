@@ -135,4 +135,4 @@ For usage on the web client use convenient predefined client:
                 
 ## Work in progress
                 
-Suggestions, pull requests and bugreports are more then welcome.                
+Suggestions, pull requests and bugreports are more than welcome.                
