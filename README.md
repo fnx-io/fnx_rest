@@ -104,7 +104,7 @@ By default, the root client is configured to produce and consume JSON and
 Dart Maps and Lists.
 You can easily customize this behaviour to accept or produce any binary data:
  
-    RestClient users = root.child("/images");        //  /api/v1/images     
+    RestClient img = root.child("/images");        //  /api/v1/images     
     img.acceptsBinary("image/png");
     img.producesBinary("image/png");
     
