@@ -11,7 +11,9 @@ import 'package:http/browser_client.dart' as http;
 
 import 'package:http/src/response.dart';
 import 'src/rest_client.dart';
+import 'src/rest_listing.dart';
 export 'src/rest_client.dart';
+export 'src/rest_listing.dart';
 
 class HttpRestClient extends RestClient {
 
