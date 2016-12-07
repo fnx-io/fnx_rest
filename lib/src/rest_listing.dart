@@ -28,7 +28,7 @@ class RestListing {
 
   /// Use this to indicate that next page should be loaded.
   Future<bool> loadNextPage() async {
-    if (working) {
+    if (working || !hasNext) {
       return false;
     }
 
