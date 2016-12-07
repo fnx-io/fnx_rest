@@ -3,7 +3,7 @@ description: Set of Angular 2 friendly REST tools.
 version: 0.5.0
 authors:
 - Tomucha <tomucha@gmail.com>
-- Jiri Zuna
+- Jiri Zuna <jiri@zunovi.cz>
 homepage: https://github.com/fnx-io/fnx_rest
 
 environment:
