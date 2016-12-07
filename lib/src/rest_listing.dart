@@ -102,8 +102,8 @@ class ListResultDriver implements RestListingDriver {
   @override
   UnpackedData unpackData(dynamic data) {
     if (data is Map) {
-      if (data != null && data is! List) {
-        throw "Expected 'data' key to be a List, but was $data";
+      if (data != null && data['data'] is! List) {
+        throw "Expected 'data' key to be a List, but was $data['data']";
       }
       List<dynamic> list = data ?? [];
       return new UnpackedData(list.isNotEmpty, list);
