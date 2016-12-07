@@ -1,9 +1,14 @@
 // Copyright (c) 2016, Tomucha. All rights reserved. Use of this source code
 // is governed by a BSD-style license that can be found in the LICENSE file.
 
-/// Support for doing something awesome.
 ///
-/// More dartdocs go here.
+/// Developer and Angular 2 friendly REST client.
+/// Do this:
+///
+///       RestClient root = HttpRestClient.root("http://myapi.example/api/v1");
+///
+/// ... and start using it. See [RestClient] for more information.
+///
 library fnx_rest;
 
 import 'dart:async';

@@ -3,7 +3,10 @@ import 'dart:convert';
 
 import 'package:http/src/response.dart';
 
-
+/// The rest client, this is the class you want to use.
+/// On web use the [new HttpRestClient.root] constructor to obtain preconfigured
+/// RestClient.
+///
 class RestClient {
 
   HttpClient _httpClient;
@@ -34,56 +37,64 @@ class RestClient {
     return new RestClient(_httpClient, this, urlPart, headers: headers);
   }
 
+  /// Configure Accept header with appropriate [Deserializer].
   RestClient accepts(String mime, Deserializer deserializer) {
     this._accepts = new Accepts.nonbinary(mime, deserializer);
 
     return this;
   }
 
+  /// Configure Accept header to receive binary data without any processing.
   RestClient acceptsBinary(String mime) {
     this._accepts = new Accepts(mime, null, true);
 
     return this;
   }
 
+  /// Configure Content-Type header to submit data as List<int> without serialization.
   RestClient producesBinary(String mime) {
     this._produces = new Produces(mime, null, true);
 
     return this;
   }
 
+  /// Configure Content-Type header with appropriate [Serializer].
   RestClient produces(String mime, Serializer serializer) {
     this._produces = new Produces.nonbinary(mime, serializer);
 
     return this;
   }
 
+  /// HTTP get with optional additional headers.
   Future<RestResult> get({Map<String, String> headers}) {
     Map<String, String> allHeaders = _headersToSend(headers);
-    workStarted();
+    _workStarted();
     Future<Response> resp = _httpClient.get(renderUrl(url, params), headers: allHeaders);
     return handleResponse(resp);
   }
 
+  /// HTTP POST with optional additional headers. Data will be processed using configured [Serializer], JSON.encode(...) by default.
   Future<RestResult> post(dynamic data, {Map<String, String> headers}) {
     Map<String, String> headersToSend = _headersToSend(headers);
     _includeContentTypeHeader(headersToSend);
-    workStarted();
+    _workStarted();
     Future<Response> resp = _httpClient.post(renderUrl(url, params), effProduces.serialize(data), headers: headersToSend);
     return handleResponse(resp);
   }
 
+  /// HTTP PUT with optional additional headers. Data will be processed using configured [Serializer], JSON.encode(...) by default.
   Future<RestResult> put(dynamic data, {Map<String, String> headers}) {
     Map<String, String> headersToSend = _headersToSend(headers);
     _includeContentTypeHeader(headersToSend);
-    workStarted();
+    _workStarted();
     Future<Response> resp = _httpClient.put(renderUrl(url, params), effProduces.serialize(data), headers: headersToSend);
     return handleResponse(resp);
   }
 
+  /// HTTP DELETE with optional additional headers.
   Future<RestResult> delete({Map<String, String> headers}) {
     Map<String, String> allHeaders = _headersToSend(headers);
-    workStarted();
+    _workStarted();
     Future<Response> resp = _httpClient.delete(renderUrl(url, params), headers: allHeaders);
     return handleResponse(resp);
   }
@@ -94,8 +105,9 @@ class RestClient {
     _includeAcceptHeader(allHeaders);
     return allHeaders;
   }
+
   Future<RestResult> handleResponse(Future<Response> resp) {
-    return processResponse(effAccepts, resp.whenComplete(workCompleted));
+    return processResponse(effAccepts, resp.whenComplete(_workCompleted));
   }
 
   static Future<RestResult> processResponse(Accepts accepts, Future<Response> resp) {
@@ -185,14 +197,14 @@ class RestClient {
 
   bool get working => _workingCount > 0;
 
-  void workStarted() {
+  void _workStarted() {
     _workingCount++;
-    _parent?.workStarted();
+    _parent?._workStarted();
   }
 
-  void workCompleted() {
+  void _workCompleted() {
     _workingCount--;
-    _parent?.workCompleted();
+    _parent?._workCompleted();
   }
 
   Map<String, String> get headers {
@@ -210,11 +222,13 @@ class RestClient {
     return res;
   }
 
+  /// Configure additional header. Will be inherited by all children.
   RestClient setHeader(String name, String value) {
     _headers[name] = value;
     return this;
   }
 
+  /// Remove additional header. Will be inherited by all children.
   RestClient removeHeader(String name) {
     _headers.remove(name);
     return this;
@@ -229,10 +243,12 @@ class RestClient {
     return res;
   }
 
+  /// Add query parameter.
   RestClient setParam(String name, String value) {
     return _setParam(name, value);
   }
 
+  /// Add query parameter.
   RestClient setParams(String name, List<String> value) {
     return _setParam(name, value);
   }
@@ -280,6 +296,11 @@ class RestClient {
   }
 }
 
+///
+/// Create your own implementation of this class if you
+/// need to inject your own HTTP client into RestClient.
+/// On server, for example. See [new RestClient].
+///
 abstract class HttpClient {
 
   Future<Response> get(String url, {Map<String, String> headers});
@@ -288,7 +309,13 @@ abstract class HttpClient {
   Future<Response> delete(String url, {Map<String, String> headers});
 }
 
+///
+/// Defines function which si able to take Dart objects and serialize them for upload (POST, PUT).
 typedef dynamic Serializer(dynamic payload);
+
+///
+/// Defines function which is able to take HTTP response body and deserialize is into a Dart object.
+/// Should return a String or List<int>.
 typedef dynamic Deserializer(String payload);
 
 RegExp microRemoval = new RegExp(r'\.[0-9]{0,6}');
@@ -301,6 +328,8 @@ Object toJsonEncodable(Object value) {
   }
 }
 
+///
+/// Uses JSON.decode(...) from dart:convert.
 Deserializer defaultJsonDeserializer = (String payload) {
   if (payload == null) {
     return null;
@@ -315,6 +344,8 @@ Deserializer defaultJsonDeserializer = (String payload) {
   }
 };
 
+///
+/// Uses JSON.encode(...) from dart:convert.
 Serializer defaultJsonSerializer = (dynamic payload) {
   if (payload == null) {
     return null;
@@ -330,19 +361,35 @@ class RestClientException implements Exception {
   RestClientException(this.message);
 }
 
+///
+/// Result of REST call.
 class RestResult {
+
+  /// HTTP status
   final int status;
+
+  /// Deserialized response body.
   final dynamic data;
 
   RestResult(this.status, this.data);
 
-  get success => 200 <= status && status < 300;
-  get failure => 400 <= status && status < 500;
-  get error => 500 <= status;
+  /// Convenient interpretation of HTTP status (>=200 && < 300)
+  bool get success => 200 <= status && status < 300;
 
-  get notFound =>  status == 404;
-  get notAuthorized => status == 401;
-  get forbidden => status == 403;
+  /// Convenient interpretation of HTTP status (>=400 && < 500)
+  bool get failure => 400 <= status && status < 500;
+
+  /// Convenient interpretation of HTTP status (>=500)
+  bool get error => 500 <= status;
+
+  /// Convenient interpretation of HTTP status (404)
+  bool get notFound =>  status == 404;
+
+  /// Convenient interpretation of HTTP status (401)
+  bool get notAuthorized => status == 401;
+
+  /// Convenient interpretation of HTTP status (403)
+  bool get forbidden => status == 403;
 
   void throwError() {
     throw new HttpException(status, data);
@@ -368,6 +415,9 @@ class UrlParseResult {
   Map<String, dynamic> get params => _params;
 }
 
+///
+/// Couple of mime type and Deserializer.
+///
 class Accepts {
   final String mime;
   final Deserializer deserializer;
@@ -386,6 +436,9 @@ class Accepts {
   }
 }
 
+///
+/// Couple of mime type and Serializer.
+///
 class Produces {
   final String mime;
   final Serializer serializer;
