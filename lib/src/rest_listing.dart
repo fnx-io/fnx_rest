@@ -56,6 +56,11 @@ class RestListing {
     _hasNext = true;
     return loadNextPage();
   }
+
+  // Does this listing have any items?
+  bool isEmpty() {
+    return list == null || list.isEmpty;
+  }
 }
 
 /// Allows to hook into the process of requesting data from the API
