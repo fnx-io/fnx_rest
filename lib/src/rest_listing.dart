@@ -52,6 +52,7 @@ class RestListing {
   /// Clears accumulated data and starts fetching page 0
   Future<bool> refresh() {
     _version++;
+    page = 0;
     list.clear();
     _hasNext = true;
     return loadNextPage();
