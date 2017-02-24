@@ -39,24 +39,31 @@ class RestListing {
 
     RestClient client = _driver.prepareClient(rest, page);
 
-    int reqVersion = _version;
-    RestResult rr = await client.get();
-    if (_version != reqVersion) return false;
-    if (rr.error || rr.failure) {
+    try {
+      int reqVersion = _version;
+      RestResult rr = await client.get();
+      if (_version != reqVersion) return false;
+      if (rr.error || rr.failure) {
+        _finishedWithError = true;
+        _hasNext = false;
+        return false;
+      }
+
+      UnpackedData data = _driver.unpackData(rr.data);
+      page++;
+
+      if (data.data != null && data.data.isNotEmpty) {
+        list.addAll(data.data);
+      }
+      _hasNext = data.hasNext;
+
+      return true;
+      
+    } catch (e) {
       _finishedWithError = true;
       _hasNext = false;
-      return false;
+      throw e;
     }
-
-    UnpackedData data = _driver.unpackData(rr.data);
-    page++;
-
-    if (data.data != null && data.data.isNotEmpty) {
-      list.addAll(data.data);
-    }
-    _hasNext = data.hasNext;
-
-    return true;
   }
 
   /// Clears accumulated data and starts fetching page 0
