@@ -15,6 +15,7 @@ class RestListing {
   int page = 0;
 
   bool _hasNext = true;
+  bool _finishedWithError = false;
   int _version = 0;
   RestListingDriver _driver;
 
@@ -25,9 +26,13 @@ class RestListing {
 
   bool get working => rest.working;
   bool get hasNext => _hasNext;
+  bool get finishedWithError => _finishedWithError;
 
   /// Use this to indicate that next page should be loaded.
   Future<bool> loadNextPage() async {
+    if (finishedWithError) {
+      return false;
+    }
     if (working || !hasNext) {
       return false;
     }
@@ -37,6 +42,11 @@ class RestListing {
     int reqVersion = _version;
     RestResult rr = await client.get();
     if (_version != reqVersion) return false;
+    if (rr.error || rr.failure) {
+      _finishedWithError = true;
+      _hasNext = false;
+      return false;
+    }
 
     UnpackedData data = _driver.unpackData(rr.data);
     page++;
@@ -55,6 +65,7 @@ class RestListing {
     page = 0;
     list.clear();
     _hasNext = true;
+    _finishedWithError = false;
     return loadNextPage();
   }
 
