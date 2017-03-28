@@ -391,6 +391,12 @@ class RestResult {
   /// Convenient interpretation of HTTP status (403)
   bool get forbidden => status == 403;
 
+  /// If the result is success method returns data. If it's not, it throws 'this'.
+  dynamic get successData {
+    if (!success) throw this;
+    return data;
+  }
+
   void throwError() {
     throw new HttpException(status, data);
   }
