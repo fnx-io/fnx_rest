@@ -29,7 +29,7 @@ class RestListing {
   bool get finishedWithError => _finishedWithError;
 
   /// Use this to indicate that next page should be loaded.
-  Future<bool> loadNextPage() async {
+  Future<bool> loadNextPage({clearPrevious: false}) async {
     if (finishedWithError) {
       return false;
     }
@@ -52,6 +52,9 @@ class RestListing {
       UnpackedData data = _driver.unpackData(rr.data);
       page++;
 
+      if (clearPrevious) {
+        list.clear();
+      }
       if (data.data != null && data.data.isNotEmpty) {
         list.addAll(data.data);
       }
@@ -70,10 +73,9 @@ class RestListing {
   Future<bool> refresh() {
     _version++;
     page = 0;
-    list.clear();
     _hasNext = true;
     _finishedWithError = false;
-    return loadNextPage();
+    return loadNextPage(clearPrevious: true);
   }
 
   // Does this listing have any items?
