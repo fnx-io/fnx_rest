@@ -50,4 +50,10 @@ class BrowserHttpClient extends HttpClient {
   Future<Response> put(String url, data, {Map<String, String> headers}) {
     return _client.put(url, headers: headers, body: data);
   }
+
+  @override
+  Future<Response> head(String url, {Map<String, String> headers}) {
+    return _client.head(url, headers: headers);
+  }
+
 }

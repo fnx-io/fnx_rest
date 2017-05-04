@@ -99,6 +99,14 @@ class RestClient {
     return handleResponse(resp);
   }
 
+  /// HTTP HEAD with optional additional headers.
+  Future<RestResult> head({Map<String, String> headers}) {
+    Map<String, String> allHeaders = _headersToSend(headers);
+    _workStarted();
+    Future<Response> resp = _httpClient.head(renderUrl(url, params), headers: allHeaders);
+    return handleResponse(resp);
+  }
+
   Map<String, String> _headersToSend(Map<String, String> headers) {
     Map<String, String> allHeaders = this.headers;
     allHeaders.addAll(headers ?? {});
@@ -307,6 +315,7 @@ abstract class HttpClient {
   Future<Response> post(String url, dynamic data, {Map<String, String> headers});
   Future<Response> put(String url, dynamic data, {Map<String, String> headers});
   Future<Response> delete(String url, {Map<String, String> headers});
+  Future<Response> head(String url, {Map<String, String> headers});
 }
 
 ///

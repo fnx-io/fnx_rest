@@ -174,6 +174,15 @@ void main() {
     });
   });
 
+  group("head method", () {
+    test("delegates to underlying httpClient correctly", () {
+      MockHttpClient httpClient = successReturningHttpClient(new MockHttpClient());
+      RestClient r = new RestClient(httpClient, null, "a.c/", headers: {'a': 'a'});
+      r.head(headers: {'b': 'b'});
+      verify(httpClient.head('a.c/', headers: {'a': 'a', 'b': 'b', 'Accept': 'application/json'}));
+    });
+  });
+
   group("RestClient supports binary content-types", () {
     test("GET can passthrough binary response", () {
       MockHttpClient httpClient = successReturningHttpClient(new MockHttpClient(), respFactory: () => newResponse(status: 200, binaryBody: binaryData));
@@ -365,7 +374,7 @@ MockHttpClient successReturningHttpClient(HttpClient httpClient, {ResponseFactor
   when(httpClient.delete(any, headers: any)).thenReturn(respFactory());
   when(httpClient.post(any, any, headers: any)).thenReturn(respFactory());
   when(httpClient.put(any, any, headers: any)).thenReturn(respFactory());
-  when(httpClient.put(any, any, headers: any)).thenReturn(respFactory());
+  when(httpClient.head(any, headers: any)).thenReturn(respFactory());
   return httpClient;
 }
 
