@@ -34,7 +34,7 @@ class RestClient {
   }
 
   RestClient child(String urlPart, {Map<String, String> headers}) {
-    return new RestClient(_httpClient, this, urlPart, headers: headers);
+    return new RestClient(_httpClient, this, urlPart, headers: headers ?? _headers);
   }
 
   /// Configure Accept header with appropriate [Deserializer].
