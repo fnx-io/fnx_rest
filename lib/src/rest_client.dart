@@ -306,7 +306,7 @@ abstract class HttpClient {
   Future<Response> get(String url, {Map<String, String> headers});
   Future<Response> post(String url, dynamic data, {Map<String, String> headers});
   Future<Response> put(String url, dynamic data, {Map<String, String> headers});
-  Future<Response> delete(String url, {Map<String, String> headers});
+  Future<Response> delete(String url, {dynamic data, Map<String, String> headers});
 }
 
 ///

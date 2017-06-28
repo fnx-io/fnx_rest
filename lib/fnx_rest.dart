@@ -12,11 +12,13 @@
 library fnx_rest;
 
 import 'dart:async';
-import 'package:http/browser_client.dart' as http;
 
+import 'package:http/browser_client.dart' as http;
+import 'package:http/src/request.dart';
 import 'package:http/src/response.dart';
+
 import 'src/rest_client.dart';
-import 'src/rest_listing.dart';
+
 export 'src/rest_client.dart';
 export 'src/rest_listing.dart';
 
@@ -37,8 +39,15 @@ class BrowserHttpClient extends HttpClient {
   }
 
   @override
-  Future<Response> delete(String url, {Map<String, String> headers}) {
-    return _client.delete(url, headers: headers);
+  Future<Response> delete(String url, {dynamic data, Map<String, String> headers}) async {
+    Request request = new Request("DELETE", Uri.parse(url));
+    if (headers != null) {
+      request.headers.addAll(headers);
+    }
+    if (data != null) {
+      request.body = data;
+    }
+    return Response.fromStream(await _client.send(request));
   }
 
   @override
