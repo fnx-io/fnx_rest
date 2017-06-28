@@ -94,8 +94,9 @@ class RestClient {
   /// HTTP DELETE with optional additional headers and optional body
   Future<RestResult> delete({dynamic data, Map<String, String> headers}) {
     Map<String, String> allHeaders = _headersToSend(headers);
+    _includeContentTypeHeader(allHeaders);
     _workStarted();
-    Future<Response> resp = _httpClient.delete(renderUrl(url, params), data: data, headers: allHeaders);
+    Future<Response> resp = _httpClient.delete(renderUrl(url, params), data: effProduces.serialize(data), headers: allHeaders);
     return handleResponse(resp);
   }
 
