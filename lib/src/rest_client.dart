@@ -91,11 +91,19 @@ class RestClient {
     return handleResponse(resp);
   }
 
-  /// HTTP DELETE with optional additional headers.
-  Future<RestResult> delete({Map<String, String> headers}) {
+  /// HTTP DELETE with optional additional headers and optional body
+  Future<RestResult> delete({dynamic data, Map<String, String> headers}) {
     Map<String, String> allHeaders = _headersToSend(headers);
     _workStarted();
-    Future<Response> resp = _httpClient.delete(renderUrl(url, params), headers: allHeaders);
+    Future<Response> resp = _httpClient.delete(renderUrl(url, params), data: data, headers: allHeaders);
+    return handleResponse(resp);
+  }
+
+  /// HTTP HEAD with optional additional headers.
+  Future<RestResult> head({Map<String, String> headers}) {
+    Map<String, String> allHeaders = _headersToSend(headers);
+    _workStarted();
+    Future<Response> resp = _httpClient.head(renderUrl(url, params), headers: allHeaders);
     return handleResponse(resp);
   }
 
@@ -307,6 +315,7 @@ abstract class HttpClient {
   Future<Response> post(String url, dynamic data, {Map<String, String> headers});
   Future<Response> put(String url, dynamic data, {Map<String, String> headers});
   Future<Response> delete(String url, {dynamic data, Map<String, String> headers});
+  Future<Response> head(String url, {Map<String, String> headers});
 }
 
 ///

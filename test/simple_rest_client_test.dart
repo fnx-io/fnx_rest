@@ -170,7 +170,16 @@ void main() {
       MockHttpClient httpClient = successReturningHttpClient(new MockHttpClient());
       RestClient r = new RestClient(httpClient, null, "a.c/", headers: {'a': 'a'});
       r.delete(headers: {'b': 'b'});
-      verify(httpClient.delete('a.c/', headers: {'a': 'a', 'b': 'b', 'Accept': 'application/json'}));
+      verify(httpClient.delete('a.c/', data: null, headers: {'a': 'a', 'b': 'b', 'Accept': 'application/json'}));
+    });
+  });
+
+  group("head method", () {
+    test("delegates to underlying httpClient correctly", () {
+      MockHttpClient httpClient = successReturningHttpClient(new MockHttpClient());
+      RestClient r = new RestClient(httpClient, null, "a.c/", headers: {'a': 'a'});
+      r.head(headers: {'b': 'b'});
+      verify(httpClient.head('a.c/', headers: {'a': 'a', 'b': 'b', 'Accept': 'application/json'}));
     });
   });
 
@@ -264,7 +273,7 @@ void main() {
 
       HttpClient httpClient = new MockHttpClient();
       when(httpClient.get(any, headers: any)).thenReturn(fut1);
-      when(httpClient.delete(any, headers: any)).thenReturn(fut2);
+      when(httpClient.delete(any, data: any, headers: any)).thenReturn(fut2);
 
       RestClient client = new RestClient(httpClient, null, "/");
       Future<RestResult> resp1 = client.get();
@@ -291,7 +300,7 @@ void main() {
 
       HttpClient httpClient = new MockHttpClient();
       when(httpClient.get(any, headers: any)).thenReturn(fut1);
-      when(httpClient.delete(any, headers: any)).thenReturn(fut2);
+      when(httpClient.delete(any, data: any, headers: any)).thenReturn(fut2);
 
       RestClient client = new RestClient(httpClient, null, "/");
       RestClient ch1 = client.child("/something");
@@ -362,10 +371,10 @@ Future<Response> newResponse({int status, String body, List<int> binaryBody}) {
 MockHttpClient successReturningHttpClient(HttpClient httpClient, {ResponseFactory respFactory}) {
   if (respFactory == null) respFactory = newResponse;
   when(httpClient.get(any, headers: any)).thenReturn(respFactory());
-  when(httpClient.delete(any, headers: any)).thenReturn(respFactory());
+  when(httpClient.delete(any, data: any, headers: any)).thenReturn(respFactory());
   when(httpClient.post(any, any, headers: any)).thenReturn(respFactory());
   when(httpClient.put(any, any, headers: any)).thenReturn(respFactory());
-  when(httpClient.put(any, any, headers: any)).thenReturn(respFactory());
+  when(httpClient.head(any, headers: any)).thenReturn(respFactory());
   return httpClient;
 }
 
