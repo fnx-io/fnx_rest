@@ -4,8 +4,6 @@ import 'package:test/test.dart';
 import 'package:fnx_rest/src/rest_client.dart';
 import 'package:mockito/mockito.dart';
 
-class MockHttpClient extends Mock implements HttpClient {}
-
 List<int> binaryData = [0x48, 0x65, 0x6C, 0x6C, 0x6F, 0x20, 0x77, 0x6F, 0x72, 0x6C, 0x64, 0x21];
 
 void main() {

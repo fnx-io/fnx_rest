@@ -21,6 +21,10 @@ class RestClient {
   Produces _produces;
   int _workingCount = 0;
 
+  StreamController<bool> _workingStreamController = new StreamController.broadcast();
+
+  Stream<bool> get workingStream => _workingStreamController.stream;
+
   RestClient(HttpClient httpClient, RestClient parent, String url, {Map<String, String> headers}) {
     _parent = parent;
     UrlParseResult parsedUrl = parseUrl(url);
@@ -209,11 +213,13 @@ class RestClient {
   void _workStarted() {
     _workingCount++;
     _parent?._workStarted();
+    _notifyWorkingState();
   }
 
   void _workCompleted() {
     _workingCount--;
     _parent?._workCompleted();
+    _notifyWorkingState();
   }
 
   Map<String, String> get headers {
@@ -302,6 +308,10 @@ class RestClient {
     }
 
     return this;
+  }
+
+  void _notifyWorkingState() {
+    _workingStreamController.add(working);
   }
 }
 
