@@ -29,7 +29,7 @@ class HttpRestClient extends RestClient {
 
 }
 
-class BrowserHttpClient extends HttpClient {
+class BrowserHttpClient extends RestHttpClient {
 
   http.BrowserClient _client = new http.BrowserClient();
 

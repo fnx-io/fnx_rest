@@ -9,7 +9,7 @@ import 'package:http/src/response.dart';
 ///
 class RestClient {
 
-  HttpClient _httpClient;
+  RestHttpClient _httpClient;
 
   RestClient _parent;
   String _url;
@@ -25,7 +25,7 @@ class RestClient {
 
   Stream<bool> get workingStream => _workingStreamController.stream;
 
-  RestClient(HttpClient httpClient, RestClient parent, String url, {Map<String, String> headers}) {
+  RestClient(RestHttpClient httpClient, RestClient parent, String url, {Map<String, String> headers}) {
     _parent = parent;
     UrlParseResult parsedUrl = parseUrl(url);
     _url = parsedUrl.url;
@@ -33,8 +33,10 @@ class RestClient {
     _httpClient = httpClient;
     if (headers == null) headers = {};
     _headers = headers;
-    accepts('application/json', defaultJsonDeserializer);
-    produces('application/json', defaultJsonSerializer);
+    if (parent == null) {
+      accepts('application/json', defaultJsonDeserializer);
+      produces('application/json', defaultJsonSerializer);
+    }
   }
 
   RestClient child(String urlPart, {Map<String, String> headers}) {
@@ -199,8 +201,8 @@ class RestClient {
     return headers;
   }
 
-  Accepts get effAccepts => _accepts != null ? _accepts : _parent?._accepts;
-  Produces get effProduces => _produces != null ? _produces : _parent?._produces;
+  Accepts get effAccepts => _accepts != null ? _accepts : _parent?.effAccepts;
+  Produces get effProduces => _produces != null ? _produces : _parent?.effProduces;
 
   String get producesMime => effProduces?.mime;
   String get acceptsMime => effAccepts?.mime;
@@ -320,7 +322,7 @@ class RestClient {
 /// need to inject your own HTTP client into RestClient.
 /// On server, for example. See [new RestClient].
 ///
-abstract class HttpClient {
+abstract class RestHttpClient {
 
   Future<Response> get(String url, {Map<String, String> headers});
   Future<Response> post(String url, dynamic data, {Map<String, String> headers});
@@ -357,7 +359,7 @@ Deserializer defaultJsonDeserializer = (String payload) {
     if (payload.isEmpty) {
       return null;
     } else {
-      return JSON.decode(payload);
+      return json.decode(payload);
     }
   } else {
     throw new RestClientException("Payload should be string if parsed as JSON");
@@ -370,7 +372,7 @@ Serializer defaultJsonSerializer = (dynamic payload) {
   if (payload == null) {
     return null;
   } else {
-    return JSON.encode(payload, toEncodable: toJsonEncodable);
+    return json.encode(payload, toEncodable: toJsonEncodable);
   }
 };
 
