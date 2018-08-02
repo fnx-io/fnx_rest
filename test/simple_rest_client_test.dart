@@ -5,10 +5,24 @@ import 'package:http/http.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
 
-List<int> binaryData = [0x48, 0x65, 0x6C, 0x6C, 0x6F, 0x20, 0x77, 0x6F, 0x72, 0x6C, 0x64, 0x21];
+List<int> binaryData = [
+  0x48,
+  0x65,
+  0x6C,
+  0x6C,
+  0x6F,
+  0x20,
+  0x77,
+  0x6F,
+  0x72,
+  0x6C,
+  0x64,
+  0x21
+];
 
 void main() {
-  RestClient r = new RestClient(null, null, "a.c/", headers: {'a': 'a', 'b': 'b'});
+  RestClient r =
+      new RestClient(null, null, "a.c/", headers: {'a': 'a', 'b': 'b'});
   group("RestClient URL", () {
     test("can be null", () {
       expect(new RestClient(null, null, null).url, equals(''));
@@ -23,19 +37,25 @@ void main() {
 
   group("RestClient's headers", () {
     test("can be null", () {
-      expect(new RestClient(null, null, null, headers: null).headers, equals({}));
+      expect(
+          new RestClient(null, null, null, headers: null).headers, equals({}));
     });
     test("can be empty", () {
       expect(new RestClient(null, null, null, headers: {}).headers, equals({}));
     });
     test("are preserved", () {
-      expect(new RestClient(null, null, null, headers: {'b': 'b', 'c': 'c'}).headers, equals({'b': 'b', 'c': 'c'}));
+      expect(
+          new RestClient(null, null, null, headers: {'b': 'b', 'c': 'c'})
+              .headers,
+          equals({'b': 'b', 'c': 'c'}));
     });
     test("are merged with parent's", () {
-      expect(r.child("/a", headers: {'c': 'c'}).headers, equals({'a': 'a', 'b': 'b', 'c': 'c'}));
+      expect(r.child("/a", headers: {'c': 'c'}).headers,
+          equals({'a': 'a', 'b': 'b', 'c': 'c'}));
     });
     test("overwrite same headers from parent", () {
-      expect(r.child("/a", headers: {'b': 'bb'}).headers, equals({'a': 'a', 'b': 'bb'}));
+      expect(r.child("/a", headers: {'b': 'bb'}).headers,
+          equals({'a': 'a', 'b': 'bb'}));
     });
   });
 
@@ -53,10 +73,13 @@ void main() {
       RestClient rc = new RestClient(null, null, null);
       rc.setParams('a', ['1', '2']);
 
-      expect(() => rc.getParam('a'), throwsA(contains("Invalid parameter type")));
+      expect(
+          () => rc.getParam('a'), throwsA(contains("Invalid parameter type")));
     });
 
-    test("if single param accessed by getParams, it is converted to list automatically", () {
+    test(
+        "if single param accessed by getParams, it is converted to list automatically",
+        () {
       RestClient rc = new RestClient(null, null, null);
       rc.setParam('a', 'b');
       expect(rc.getParams('a'), equals(['b']));
@@ -110,27 +133,35 @@ void main() {
       rc.setParam("3", "4");
 
       rc.get();
-      verify(client.get("/something?is=wrong&1=2&3=4", headers: anyNamed("headers")));
+      verify(client.get("/something?is=wrong&1=2&3=4",
+          headers: anyNamed("headers")));
     });
   });
 
   group("When parsing responses", () {
     Future<RestResult> processResponse(Deserializer d, Future<Response> resp) {
-      return RestClient.processResponse(new Accepts("some/thing", d, false), resp);
+      return RestClient.processResponse(
+          new Accepts("some/thing", d, false), resp);
     }
+
     Deserializer d = (dynamic v) => v is String ? int.parse(v) : -1;
     group("and deserializer is called", () {
       test("when the result is successful", () {
-        Future<dynamic> r = processResponse(d, buildMockResponse(null, status: 200, body: "1")).then((RestResult r) => r.data);
+        Future<dynamic> r =
+            processResponse(d, buildMockResponse(null, status: 200, body: "1"))
+                .then((RestResult r) => r.data);
         expect(r, completion(equals(1)));
       });
       test("when the result is failure", () {
-        Future<dynamic> r = processResponse(d, buildMockResponse(null, status: 401, body: "1")).then((RestResult r) => r.data);
+        Future<dynamic> r =
+            processResponse(d, buildMockResponse(null, status: 401, body: "1"))
+                .then((RestResult r) => r.data);
         expect(r, completion(equals(1)));
       });
     });
     test("and the status is > 500, it throws HttpException", () {
-      Future<RestResult> r = processResponse(d, buildMockResponse(null, status: 500, body: "1"));
+      Future<RestResult> r =
+          processResponse(d, buildMockResponse(null, status: 500, body: "1"));
       expect(r, throwsA(equals(new TypeMatcher<HttpException>())));
     });
   });
@@ -138,53 +169,77 @@ void main() {
   group("get method", () {
     test("delegates to underlying httpClient correctly", () {
       MockHttpClient httpClient = successReturningHttpClient();
-      RestClient r = new RestClient(httpClient, null, "a.c/", headers: {'a': 'a'});
+      RestClient r =
+          new RestClient(httpClient, null, "a.c/", headers: {'a': 'a'});
       r.get(headers: {'b': 'b'});
-      verify(httpClient.get('a.c/', headers: {'a': 'a', 'b': 'b', 'Accept': 'application/json'}));
+      verify(httpClient.get('a.c/',
+          headers: {'a': 'a', 'b': 'b', 'Accept': 'application/json'}));
     });
   });
 
   group("post method", () {
     test("delegates to underlying httpClient correctly", () {
       MockHttpClient httpClient = successReturningHttpClient();
-      RestClient r = new RestClient(httpClient, null, "a.c/", headers: {'a': 'a'});
+      RestClient r =
+          new RestClient(httpClient, null, "a.c/", headers: {'a': 'a'});
       r.post({'zz': 'top'}, headers: {'b': 'b'});
       String reqJSON = '{"zz":"top"}';
-      verify(httpClient.post('a.c/', reqJSON, headers: {'a': 'a', 'b': 'b', 'Accept': 'application/json', 'Content-Type': 'application/json'}));
+      verify(httpClient.post('a.c/', reqJSON, headers: {
+        'a': 'a',
+        'b': 'b',
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }));
     });
   });
 
   group("put method", () {
     test("delegates to underlying httpClient correctly", () {
       MockHttpClient httpClient = successReturningHttpClient();
-      RestClient r = new RestClient(httpClient, null, "a.c/", headers: {'a': 'a'});
+      RestClient r =
+          new RestClient(httpClient, null, "a.c/", headers: {'a': 'a'});
       r.put({'zz': 'top'}, headers: {'b': 'b'});
       String reqJSON = '{"zz":"top"}';
-      verify(httpClient.put('a.c/', reqJSON, headers: {'a': 'a', 'b': 'b', 'Accept': 'application/json', 'Content-Type': 'application/json'}));
+      verify(httpClient.put('a.c/', reqJSON, headers: {
+        'a': 'a',
+        'b': 'b',
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }));
     });
   });
 
   group("delete method", () {
     test("delegates to underlying httpClient correctly", () {
       MockHttpClient httpClient = successReturningHttpClient();
-      RestClient r = new RestClient(httpClient, null, "a.c/", headers: {'a': 'a'});
+      RestClient r =
+          new RestClient(httpClient, null, "a.c/", headers: {'a': 'a'});
       r.delete(headers: {'b': 'b'});
-      verify(httpClient.delete('a.c/', data: null, headers: {'a': 'a', 'b': 'b', 'Accept': 'application/json', 'Content-Type': 'application/json'}));
+      verify(httpClient.delete('a.c/', data: null, headers: {
+        'a': 'a',
+        'b': 'b',
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }));
     });
   });
 
   group("head method", () {
     test("delegates to underlying httpClient correctly", () {
       MockHttpClient httpClient = successReturningHttpClient();
-      RestClient r = new RestClient(httpClient, null, "a.c/", headers: {'a': 'a'});
+      RestClient r =
+          new RestClient(httpClient, null, "a.c/", headers: {'a': 'a'});
       r.head(headers: {'b': 'b'});
-      verify(httpClient.head('a.c/', headers: {'a': 'a', 'b': 'b', 'Accept': 'application/json'}));
+      verify(httpClient.head('a.c/',
+          headers: {'a': 'a', 'b': 'b', 'Accept': 'application/json'}));
     });
   });
 
   group("RestClient supports binary content-types", () {
     test("GET can passthrough binary response", () {
-      MockHttpClient httpClient = successReturningHttpClient( respFactory: (Invocation i) => buildMockResponse(i, status: 200, binaryBody: binaryData));
+      MockHttpClient httpClient = successReturningHttpClient(
+          respFactory: (Invocation i) =>
+              buildMockResponse(i, status: 200, binaryBody: binaryData));
       RestClient rc = new RestClient(httpClient, null, "/");
       rc.acceptsBinary("image/png");
       Future<RestResult> futRr = rc.get();
@@ -194,28 +249,36 @@ void main() {
     });
     group("POST", () {
       test("can make binary requests", () {
-        MockHttpClient httpClient = successReturningHttpClient( respFactory: (Invocation i) => buildMockResponse(i, status: 200, binaryBody: binaryData));
+        MockHttpClient httpClient = successReturningHttpClient(
+            respFactory: (Invocation i) =>
+                buildMockResponse(i, status: 200, binaryBody: binaryData));
         RestClient rc = new RestClient(httpClient, null, "/");
         rc.producesBinary("image/png");
         rc.acceptsBinary("image/png");
-        Future<dynamic> rr = rc.post(binaryData).then((RestResult rr) => rr.data);
+        Future<dynamic> rr =
+            rc.post(binaryData).then((RestResult rr) => rr.data);
         verify(httpClient.post("/", binaryData, headers: anyNamed("headers")));
       });
 
       test("can receive binary responses", () {
-        MockHttpClient httpClient = successReturningHttpClient( respFactory: (Invocation i) => buildMockResponse(i, status: 200, binaryBody: binaryData));
+        MockHttpClient httpClient = successReturningHttpClient(
+            respFactory: (Invocation i) =>
+                buildMockResponse(i, status: 200, binaryBody: binaryData));
         RestClient rc = new RestClient(httpClient, null, "/");
         rc.producesBinary("image/png");
         rc.acceptsBinary("image/png");
 
-        Future<dynamic> rr = rc.post(binaryData).then((RestResult rr) => rr.data);
+        Future<dynamic> rr =
+            rc.post(binaryData).then((RestResult rr) => rr.data);
         expect(rr, completion(equals(binaryData)));
       });
     });
 
     group("PUT", () {
       test("can make binary requests", () {
-        MockHttpClient httpClient = successReturningHttpClient( respFactory: (Invocation i) => buildMockResponse(i, status: 200, binaryBody: binaryData));
+        MockHttpClient httpClient = successReturningHttpClient(
+            respFactory: (Invocation i) =>
+                buildMockResponse(i, status: 200, binaryBody: binaryData));
         RestClient rc = new RestClient(httpClient, null, "/");
         rc.producesBinary("image/png");
         rc.acceptsBinary("image/png");
@@ -224,19 +287,24 @@ void main() {
       });
 
       test("can receive binary responses", () {
-        MockHttpClient httpClient = successReturningHttpClient( respFactory: (Invocation i) => buildMockResponse(i, status: 200, binaryBody: binaryData));
+        MockHttpClient httpClient = successReturningHttpClient(
+            respFactory: (Invocation i) =>
+                buildMockResponse(i, status: 200, binaryBody: binaryData));
         RestClient rc = new RestClient(httpClient, null, "/");
         rc.producesBinary("image/png");
         rc.acceptsBinary("image/png");
 
-        Future<dynamic> rr = rc.put(binaryData).then((RestResult rr) => rr.data);
+        Future<dynamic> rr =
+            rc.put(binaryData).then((RestResult rr) => rr.data);
         expect(rr, completion(equals(binaryData)));
       });
     });
 
     group("DELETE", () {
       test("can receive binary responses", () {
-        MockHttpClient httpClient = successReturningHttpClient( respFactory: (Invocation i) => buildMockResponse(i, status: 200, binaryBody: binaryData));
+        MockHttpClient httpClient = successReturningHttpClient(
+            respFactory: (Invocation i) =>
+                buildMockResponse(i, status: 200, binaryBody: binaryData));
         RestClient rc = new RestClient(httpClient, null, "/");
         rc.producesBinary("image/png");
         rc.acceptsBinary("image/png");
@@ -253,7 +321,8 @@ void main() {
       Completer<Response> completer = new Completer<Response>();
       Future<Response> fut = completer.future;
 
-      MockHttpClient httpClient = successReturningHttpClient( respFactory: (Invocation i) => fut);
+      MockHttpClient httpClient =
+          successReturningHttpClient(respFactory: (Invocation i) => fut);
       RestClient client = new RestClient(httpClient, null, "/");
       Future<RestResult> resp = client.get();
       expect(client.working, isTrue);
@@ -271,8 +340,11 @@ void main() {
       Future<Response> fut2 = completer2.future;
 
       RestHttpClient httpClient = new MockHttpClient();
-      when(httpClient.get(any, headers: anyNamed("headers"))).thenAnswer((_)=>fut1);
-      when(httpClient.delete(any, data: anyNamed("data"), headers: anyNamed("headers"))).thenAnswer((_)=>fut2);
+      when(httpClient.get(any, headers: anyNamed("headers")))
+          .thenAnswer((_) => fut1);
+      when(httpClient.delete(any,
+              data: anyNamed("data"), headers: anyNamed("headers")))
+          .thenAnswer((_) => fut2);
 
       RestClient client = new RestClient(httpClient, null, "/");
       Future<RestResult> resp1 = client.get();
@@ -298,8 +370,11 @@ void main() {
       Future<Response> fut2 = completer2.future;
 
       RestHttpClient httpClient = new MockHttpClient();
-      when(httpClient.get(any, headers: anyNamed("headers"))).thenAnswer((_)=>fut1);
-      when(httpClient.delete(any, data: anyNamed("data"), headers: anyNamed("headers"))).thenAnswer((_)=>fut2);
+      when(httpClient.get(any, headers: anyNamed("headers")))
+          .thenAnswer((_) => fut1);
+      when(httpClient.delete(any,
+              data: anyNamed("data"), headers: anyNamed("headers")))
+          .thenAnswer((_) => fut2);
 
       RestClient client = new RestClient(httpClient, null, "/");
       RestClient ch1 = client.child("/something");
@@ -336,7 +411,8 @@ void main() {
       Future<Response> fut = completer.future;
 
       RestHttpClient httpClient = new MockHttpClient();
-      when(httpClient.get(any, headers: anyNamed("headers"))).thenAnswer((_)=>fut);
+      when(httpClient.get(any, headers: anyNamed("headers")))
+          .thenAnswer((_) => fut);
 
       RestClient client = new RestClient(httpClient, null, "/");
 
@@ -355,7 +431,8 @@ void main() {
   });
 }
 
-Future<Response> buildMockResponse(Invocation i, {int status, String body, List<int> binaryBody}) {
+Future<Response> buildMockResponse(Invocation i,
+    {int status, String body, List<int> binaryBody}) {
   if (status == null) status = 200;
   Response r;
   if (binaryBody != null) {
@@ -372,11 +449,17 @@ class MockHttpClient extends Mock implements RestHttpClient {}
 MockHttpClient successReturningHttpClient({ResponseFactory respFactory}) {
   MockHttpClient httpClient = new MockHttpClient();
   if (respFactory == null) respFactory = buildMockResponse;
-  when(httpClient.get(any, headers: anyNamed("headers"))).thenAnswer(respFactory);
-  when(httpClient.delete(any, data: anyNamed("data"), headers: anyNamed("headers"))).thenAnswer(respFactory);
-  when(httpClient.post(any, any, headers: anyNamed("headers"))).thenAnswer(respFactory);
-  when(httpClient.put(any, any, headers: anyNamed("headers"))).thenAnswer(respFactory);
-  when(httpClient.head(any, headers: anyNamed("headers"))).thenAnswer(respFactory);
+  when(httpClient.get(any, headers: anyNamed("headers")))
+      .thenAnswer(respFactory);
+  when(httpClient.delete(any,
+          data: anyNamed("data"), headers: anyNamed("headers")))
+      .thenAnswer(respFactory);
+  when(httpClient.post(any, any, headers: anyNamed("headers")))
+      .thenAnswer(respFactory);
+  when(httpClient.put(any, any, headers: anyNamed("headers")))
+      .thenAnswer(respFactory);
+  when(httpClient.head(any, headers: anyNamed("headers")))
+      .thenAnswer(respFactory);
   return httpClient;
 }
 

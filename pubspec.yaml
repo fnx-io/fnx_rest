@@ -11,7 +11,7 @@ environment:
 
 dependencies:
   logging: "^0.11.3"
-  browser: "^0.10.0"
+  http: ^0.11.3+17
 
 dev_dependencies:
   test: '^1.3.0'

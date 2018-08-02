@@ -8,24 +8,25 @@ import 'package:http/src/response.dart';
 /// RestClient.
 ///
 class RestClient {
-
   RestHttpClient _httpClient;
 
   RestClient _parent;
   String _url;
 
   Map<String, String> _headers = {};
-  Map<String, dynamic /* String or List<String> */> _params = {};
+  Map<String, dynamic /* String or List<String> */ > _params = {};
 
   Accepts _accepts;
   Produces _produces;
   int _workingCount = 0;
 
-  StreamController<bool> _workingStreamController = new StreamController.broadcast();
+  StreamController<bool> _workingStreamController =
+      new StreamController.broadcast();
 
   Stream<bool> get workingStream => _workingStreamController.stream;
 
-  RestClient(RestHttpClient httpClient, RestClient parent, String url, {Map<String, String> headers}) {
+  RestClient(RestHttpClient httpClient, RestClient parent, String url,
+      {Map<String, String> headers}) {
     _parent = parent;
     UrlParseResult parsedUrl = parseUrl(url);
     _url = parsedUrl.url;
@@ -75,7 +76,8 @@ class RestClient {
   Future<RestResult> get({Map<String, String> headers}) {
     Map<String, String> allHeaders = _headersToSend(headers);
     _workStarted();
-    Future<Response> resp = _httpClient.get(renderUrl(url, params), headers: allHeaders);
+    Future<Response> resp =
+        _httpClient.get(renderUrl(url, params), headers: allHeaders);
     return handleResponse(resp);
   }
 
@@ -84,7 +86,9 @@ class RestClient {
     Map<String, String> headersToSend = _headersToSend(headers);
     _includeContentTypeHeader(headersToSend);
     _workStarted();
-    Future<Response> resp = _httpClient.post(renderUrl(url, params), effProduces.serialize(data), headers: headersToSend);
+    Future<Response> resp = _httpClient.post(
+        renderUrl(url, params), effProduces.serialize(data),
+        headers: headersToSend);
     return handleResponse(resp);
   }
 
@@ -93,7 +97,9 @@ class RestClient {
     Map<String, String> headersToSend = _headersToSend(headers);
     _includeContentTypeHeader(headersToSend);
     _workStarted();
-    Future<Response> resp = _httpClient.put(renderUrl(url, params), effProduces.serialize(data), headers: headersToSend);
+    Future<Response> resp = _httpClient.put(
+        renderUrl(url, params), effProduces.serialize(data),
+        headers: headersToSend);
     return handleResponse(resp);
   }
 
@@ -102,7 +108,8 @@ class RestClient {
     Map<String, String> allHeaders = _headersToSend(headers);
     _includeContentTypeHeader(allHeaders);
     _workStarted();
-    Future<Response> resp = _httpClient.delete(renderUrl(url, params), data: effProduces.serialize(data), headers: allHeaders);
+    Future<Response> resp = _httpClient.delete(renderUrl(url, params),
+        data: effProduces.serialize(data), headers: allHeaders);
     return handleResponse(resp);
   }
 
@@ -110,7 +117,8 @@ class RestClient {
   Future<RestResult> head({Map<String, String> headers}) {
     Map<String, String> allHeaders = _headersToSend(headers);
     _workStarted();
-    Future<Response> resp = _httpClient.head(renderUrl(url, params), headers: allHeaders);
+    Future<Response> resp =
+        _httpClient.head(renderUrl(url, params), headers: allHeaders);
     return handleResponse(resp);
   }
 
@@ -125,7 +133,8 @@ class RestClient {
     return processResponse(effAccepts, resp.whenComplete(_workCompleted));
   }
 
-  static Future<RestResult> processResponse(Accepts accepts, Future<Response> resp) {
+  static Future<RestResult> processResponse(
+      Accepts accepts, Future<Response> resp) {
     return resp.then((Response r) {
       dynamic data = null;
       data = accepts.deserialize(r);
@@ -145,8 +154,7 @@ class RestClient {
   static RegExp SLASH_CHAR = new RegExp(r'\/');
 
   static UrlParseResult parseUrl(String url) {
-    if (url == null || url.isEmpty){
-
+    if (url == null || url.isEmpty) {
       return new UrlParseResult('', {});
     } else {
       Uri parsed = Uri.parse(url);
@@ -158,7 +166,8 @@ class RestClient {
       // we are only interested into plain url without query parameters (we store these separately)
       Uri plain = parsed.replace(queryParameters: {}, query: null);
       String plainUrl = plain.toString();
-      if (plainUrl.endsWith('?')) plainUrl = plainUrl.substring(0, plainUrl.length - 1);
+      if (plainUrl.endsWith('?'))
+        plainUrl = plainUrl.substring(0, plainUrl.length - 1);
       return new UrlParseResult(plainUrl, parsedParams);
     }
   }
@@ -202,7 +211,8 @@ class RestClient {
   }
 
   Accepts get effAccepts => _accepts != null ? _accepts : _parent?.effAccepts;
-  Produces get effProduces => _produces != null ? _produces : _parent?.effProduces;
+  Produces get effProduces =>
+      _produces != null ? _produces : _parent?.effProduces;
 
   String get producesMime => effProduces?.mime;
   String get acceptsMime => effAccepts?.mime;
@@ -228,7 +238,7 @@ class RestClient {
     Map<String, String> res = {};
 
     Map<String, String> parentHeaders = _parent?.headers;
-    if ( parentHeaders != null && parentHeaders.isNotEmpty) {
+    if (parentHeaders != null && parentHeaders.isNotEmpty) {
       res.addAll(parentHeaders);
     }
 
@@ -251,7 +261,7 @@ class RestClient {
     return this;
   }
 
-  Map<String, dynamic /* String or List<String>*/> get params {
+  Map<String, dynamic /* String or List<String>*/ > get params {
     Map<String, dynamic> res = {};
     if (_parent != null) {
       res.addAll(_parent.params ?? {});
@@ -290,7 +300,7 @@ class RestClient {
       List<String> all = [];
       all.addAll(res);
       return all;
-    } else if (res == null ){
+    } else if (res == null) {
       return null;
     } else {
       throw "Invalid parameter type! Only String an List<String> are supported ${res}";
@@ -323,11 +333,12 @@ class RestClient {
 /// On server, for example. See [new RestClient].
 ///
 abstract class RestHttpClient {
-
   Future<Response> get(String url, {Map<String, String> headers});
-  Future<Response> post(String url, dynamic data, {Map<String, String> headers});
+  Future<Response> post(String url, dynamic data,
+      {Map<String, String> headers});
   Future<Response> put(String url, dynamic data, {Map<String, String> headers});
-  Future<Response> delete(String url, {dynamic data, Map<String, String> headers});
+  Future<Response> delete(String url,
+      {dynamic data, Map<String, String> headers});
   Future<Response> head(String url, {Map<String, String> headers});
 }
 
@@ -355,7 +366,7 @@ Object toJsonEncodable(Object value) {
 Deserializer defaultJsonDeserializer = (String payload) {
   if (payload == null) {
     return null;
-  } else  if (payload is String) {
+  } else if (payload is String) {
     if (payload.isEmpty) {
       return null;
     } else {
@@ -377,7 +388,6 @@ Serializer defaultJsonSerializer = (dynamic payload) {
 };
 
 class RestClientException implements Exception {
-
   final String message;
 
   RestClientException(this.message);
@@ -386,7 +396,6 @@ class RestClientException implements Exception {
 ///
 /// Result of REST call.
 class RestResult {
-
   /// HTTP status
   final int status;
 
@@ -405,7 +414,7 @@ class RestResult {
   bool get error => 500 <= status;
 
   /// Convenient interpretation of HTTP status (404)
-  bool get notFound =>  status == 404;
+  bool get notFound => status == 404;
 
   /// Convenient interpretation of HTTP status (401)
   bool get notAuthorized => status == 401;
@@ -451,7 +460,8 @@ class Accepts {
   final Deserializer deserializer;
   final bool binary;
 
-  Accepts.nonbinary(String mime, Deserializer deserializer): this(mime, deserializer, false);
+  Accepts.nonbinary(String mime, Deserializer deserializer)
+      : this(mime, deserializer, false);
   Accepts(this.mime, this.deserializer, this.binary);
 
   dynamic deserialize(Response resp) {
@@ -472,7 +482,8 @@ class Produces {
   final Serializer serializer;
   final bool binary;
 
-  Produces.nonbinary(String mime, Serializer serializer): this(mime, serializer, false);
+  Produces.nonbinary(String mime, Serializer serializer)
+      : this(mime, serializer, false);
   Produces(this.mime, this.serializer, this.binary);
 
   dynamic serialize(dynamic payload) {

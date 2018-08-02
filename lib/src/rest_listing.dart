@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:fnx_rest/src/rest_client.dart';
 
 /// Simple utility which allows to load pages of results for a given API endpoint
@@ -8,7 +9,6 @@ import 'package:fnx_rest/src/rest_client.dart';
 /// It accepts [RestListingDriver] which handles paging for requests and unpacking
 /// final List of data from returned response
 class RestListing {
-
   RestClient rest;
 
   List<dynamic> list = [];
@@ -61,7 +61,6 @@ class RestListing {
       _hasNext = data.hasNext;
 
       return true;
-      
     } catch (e) {
       _finishedWithError = true;
       _hasNext = false;
@@ -87,18 +86,15 @@ class RestListing {
 /// Allows to hook into the process of requesting data from the API
 /// and then unwrapping List of results from provided response
 abstract class RestListingDriver {
-
   /// Extract interesting data from the API response
   UnpackedData unpackData(dynamic data);
 
   /// Configure rest client so that it will request given `page` of data
   RestClient prepareClient(RestClient client, int page);
-
 }
 
 /// Expects the API to return List of data directly in its response.
 class SimpleListDriver implements RestListingDriver {
-
   @override
   RestClient prepareClient(RestClient client, int page) {
     return queryParamPager(client, page);
@@ -119,7 +115,6 @@ class SimpleListDriver implements RestListingDriver {
 /// Expects the API to return a Map with 'data' attribute which contains
 /// the actual List of results
 class ListResultDriver implements RestListingDriver {
-
   @override
   RestClient prepareClient(RestClient client, int page) {
     return SimpleListDriver.queryParamPager(client, page);
@@ -147,5 +142,5 @@ class UnpackedData {
 
   UnpackedData(this.hasNext, this.data);
 
-  UnpackedData.empty(): this(false, []);
+  UnpackedData.empty() : this(false, []);
 }

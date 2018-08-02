@@ -1,6 +1,6 @@
 # fnx_rest
 
-Set of REST tools which work nicely with Angular2 Dart.
+Set of REST tools which work nicely with Dart 2 / Angular.
 
 This is a plain old REST client, if you are looking for something more sophisticated,
 try [streamy](https://pub.dartlang.org/packages/streamy) for instance.
@@ -10,19 +10,19 @@ when creating boring CRUD applications with many similar API calls.
 
 ## Example
 
-    RestClient root = HttpRestClient.root("/api/v1");        
+    import 'package:fnx_rest/fnx_rest_browser.dart';
+    # import 'package:fnx_rest/fnx_rest_io.dart'; (when not in a browser)       
+
+    RestClient root = BrowserRestClient.root("/api/v1");        
     RestResult response = await root.child("/users").get();
     List users = response.data;
     
 ## Angular support
 
 You can define `root` REST client, add your API keys and other additional headers to it
-and inject this root client with Angular's
-dependency injection to your elements and/or services.
+and inject this root client with Angular's dependency injection to your elements and/or services.
     
-    # Angular initialization
-    RestClient root = HttpRestClient.root("/api/v1");            
-    bootstrap(MyApp, [ provide(RestClient, useValue: root) ]);
+    RestClient root = BrowserRestClient.root("/api/v1");            
           
     # your component
     class MyApp {
@@ -31,11 +31,13 @@ dependency injection to your elements and/or services.
     }
     
     # add custom headers, for example after user's signing in
-    restRoot.setHeader("Authorization", authKey);        
+    restRoot.setHeader("Authorization", authKey);       
+
+(see Angular docs for DI details)     
     
 RestClient is hierarchical:
     
-    RestClient root = HttpRestClient.root("/api/v1");   //  /api/v1
+    RestClient root = BrowseRestClient.root("/api/v1");   //  /api/v1
     RestClient users = root.child("/users");            //  /api/v1/users            
     RestClient john = users.child("/123");              //  /api/v1/users/123
     
@@ -53,17 +55,17 @@ client in your component like this:
     }
     
 Every instance of RestClient has bool `working` property, which indicates whether this client
-is currently processing a request/response or not. You can us it to indicate "working"
+is currently processing a request/response or not. You can use it to indicate "working"
 state to the user:
 
-    <p *ngIf="john.working">Sending user data to server ...</p>
+    <p *ngIf="users.working">Sending user data to server ...</p>
     
 This property is recursively propagated to client's parents so you can indicate
 this "working" state on any level. Locally (for a form),
 or globally (for the whole app).
      
     // update user     
-    john.put(...);
+    users.put(...);
 
 Until the request is processed, `john.working == true`, `users.working == true` and `root.working == true`.
 
@@ -84,7 +86,7 @@ RestClient has following methods:
     Future<RestResult> get({Map<String, String> headers}) ...
     Future<RestResult> post(dynamic data, {Map<String, String> headers}) ...
     Future<RestResult> put(dynamic data, {Map<String, String> headers}) ...
-    Future<RestResult> delete({Map<String, String> headers}) ...
+    Future<RestResult> delete({dynamic data, Map<String, String> headers}) ...
     Future<RestResult> head({Map<String, String> headers}) ...
     
 Use optional parameter `headers` to specify custom ad-hoc headers you need
@@ -120,19 +122,7 @@ inject any custom text based serialization or deserialization you need:
     client.accepts("text/csv", myCsvDeserializeFunction);
     client.produces("text/csv", myCsvSerializeFunction);
     
-This configuration is inherited by client's children.    
-    
-## Custom HTTP client
-    
-This client is mainly intended for client side, but you can use it on server side too,
-just provide custom HTTP client to the RestClient constructor.
-     
-     RestClient(HttpClient httpClient, RestClient parent, String url, {Map<String, String> headers});
-     
-For usage on the web client use convenient predefined client:
-
-    RestClient root = HttpRestClient.root("/api/v1");
-                
+This configuration is inherited by client's children.                        
                 
 ## Work in progress
                 

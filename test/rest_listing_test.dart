@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:fnx_rest/src/rest_client.dart';
 import 'package:fnx_rest/src/rest_listing.dart';
 import 'package:test/test.dart';
@@ -35,13 +34,17 @@ void main() {
       group("fail if", () {
         test("response is not a map", () {
           ListResultDriver driver = new ListResultDriver();
-          expect(() => driver.unpackData([1, 2, 3]),
-              throwsA((String msg) => msg.contains("Expected result to be a map")));
+          expect(
+              () => driver.unpackData([1, 2, 3]),
+              throwsA(
+                  (String msg) => msg.contains("Expected result to be a map")));
         });
         test("response has no property 'data'", () {
           ListResultDriver driver = new ListResultDriver();
-          expect(() => driver.unpackData({'data': "string"}),
-              throwsA((String msg) => msg.contains("Expected 'data' key to be a List")));
+          expect(
+              () => driver.unpackData({'data': "string"}),
+              throwsA((String msg) =>
+                  msg.contains("Expected 'data' key to be a List")));
         });
       });
     });
