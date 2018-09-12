@@ -173,7 +173,20 @@ void main() {
           new RestClient(httpClient, null, "a.c/", headers: {'a': 'a'});
       r.get(headers: {'b': 'b'});
       verify(httpClient.get('a.c/',
-          headers: {'a': 'a', 'b': 'b', 'Accept': 'application/json'}));
+          headers: {
+            'a': 'a',
+            'b': 'b',
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }));
+    });
+    test("passes body data correctly", () {
+      MockHttpClient httpClient = successReturningHttpClient();
+      RestClient r = new RestClient(httpClient, null, "a.c/");
+      r.get(data: {'punk': 'floid'});
+      String dataJSON = '{"punk":"floid"}';
+      verify(
+          httpClient.get('a.c/', data: dataJSON, headers: anyNamed("headers")));
     });
   });
 
@@ -255,8 +268,7 @@ void main() {
         RestClient rc = new RestClient(httpClient, null, "/");
         rc.producesBinary("image/png");
         rc.acceptsBinary("image/png");
-        Future<dynamic> rr =
-            rc.post(binaryData).then((RestResult rr) => rr.data);
+        rc.post(binaryData).then((RestResult rr) => rr.data);
         verify(httpClient.post("/", binaryData, headers: anyNamed("headers")));
       });
 
@@ -282,7 +294,7 @@ void main() {
         RestClient rc = new RestClient(httpClient, null, "/");
         rc.producesBinary("image/png");
         rc.acceptsBinary("image/png");
-        Future<RestResult> r = rc.put(binaryData);
+        rc.put(binaryData);
         verify(httpClient.put("/", binaryData, headers: anyNamed("headers")));
       });
 
@@ -449,7 +461,8 @@ class MockHttpClient extends Mock implements RestHttpClient {}
 MockHttpClient successReturningHttpClient({ResponseFactory respFactory}) {
   MockHttpClient httpClient = new MockHttpClient();
   if (respFactory == null) respFactory = buildMockResponse;
-  when(httpClient.get(any, headers: anyNamed("headers")))
+  when(httpClient.get(any,
+      data: anyNamed("data"), headers: anyNamed("headers")))
       .thenAnswer(respFactory);
   when(httpClient.delete(any,
           data: anyNamed("data"), headers: anyNamed("headers")))

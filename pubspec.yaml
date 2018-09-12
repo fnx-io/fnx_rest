@@ -1,9 +1,10 @@
 name: fnx_rest
 description: Set of Angular friendly REST tools.
-version: 2.0.0
+version: 2.0.1
 authors:
 - Tomucha <tomucha@gmail.com>
 - Jiri Zuna <jiri@zunovi.cz>
+- Dafe Simonek <dafesimonek@gmail.com>
 homepage: https://github.com/fnx-io/fnx_rest
 
 environment:

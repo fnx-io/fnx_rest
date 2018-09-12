@@ -44,6 +44,14 @@ RestClient is hierarchical:
 All children inherit configuration of their parents, but are allowed
 to override it.
 
+RestClient supports query parameters:
+    
+    RestClient limitedUsers = users.setParam('limit', '1000');  //  /api/v1/users?limit=1000            
+    
+All children inherit configuration of their parents, but are allowed
+to override it.
+
+
 Typically you would create a child of the root rest
 client in your component like this:
 
@@ -83,7 +91,7 @@ global indicator of any HTTP communication (in your app status bar, for example)
 
 RestClient has following methods:
 
-    Future<RestResult> get({Map<String, String> headers}) ...
+    Future<RestResult> get({dynamic data, Map<String, String> headers}) ...
     Future<RestResult> post(dynamic data, {Map<String, String> headers}) ...
     Future<RestResult> put(dynamic data, {Map<String, String> headers}) ...
     Future<RestResult> delete({dynamic data, Map<String, String> headers}) ...

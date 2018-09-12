@@ -72,12 +72,14 @@ class RestClient {
     return this;
   }
 
-  /// HTTP get with optional additional headers.
-  Future<RestResult> get({Map<String, String> headers}) {
+  /// HTTP get with optional additional headers and optional body.
+  Future<RestResult> get({dynamic data, Map<String, String> headers}) {
     Map<String, String> allHeaders = _headersToSend(headers);
+    _includeContentTypeHeader(allHeaders);
     _workStarted();
     Future<Response> resp =
-        _httpClient.get(renderUrl(url, params), headers: allHeaders);
+    _httpClient.get(renderUrl(url, params), data: effProduces.serialize(data),
+        headers: allHeaders);
     return handleResponse(resp);
   }
 
@@ -333,7 +335,7 @@ class RestClient {
 /// On server, for example. See [new RestClient].
 ///
 abstract class RestHttpClient {
-  Future<Response> get(String url, {Map<String, String> headers});
+  Future<Response> get(String url, {dynamic data, Map<String, String> headers});
   Future<Response> post(String url, dynamic data,
       {Map<String, String> headers});
   Future<Response> put(String url, dynamic data, {Map<String, String> headers});

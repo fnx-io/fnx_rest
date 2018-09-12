@@ -32,20 +32,16 @@ class BrowserHttpClient extends RestHttpClient {
   http.BrowserClient _client = new http.BrowserClient();
 
   @override
-  Future<Response> get(String url, {Map<String, String> headers}) {
-    return _client.get(url, headers: headers);
+  Future<Response> get(String url,
+      {dynamic data, Map<String, String> headers}) async {
+    Request request = _createRequest("GET", url, data, headers);
+    return Response.fromStream(await _client.send(request));
   }
 
   @override
   Future<Response> delete(String url,
       {dynamic data, Map<String, String> headers}) async {
-    Request request = new Request("DELETE", Uri.parse(url));
-    if (headers != null) {
-      request.headers.addAll(headers);
-    }
-    if (data != null) {
-      request.body = data;
-    }
+    Request request = _createRequest("DELETE", url, data, headers);
     return Response.fromStream(await _client.send(request));
   }
 
@@ -63,4 +59,17 @@ class BrowserHttpClient extends RestHttpClient {
   Future<Response> head(String url, {Map<String, String> headers}) {
     return _client.head(url, headers: headers);
   }
+
+  Request _createRequest(String method, String url, dynamic data,
+      Map<String, String> headers) {
+    Request request = new Request(method, Uri.parse(url));
+    if (headers != null) {
+      request.headers.addAll(headers);
+    }
+    if (data != null) {
+      request.body = data;
+    }
+    return request;
+  }
+
 }
