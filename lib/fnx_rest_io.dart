@@ -27,7 +27,6 @@ class IoRestClient extends RestClient {
       : super(new IOHttpClient(), parent, url);
 }
 
-
 class IOHttpClient extends RestHttpClient {
   IOClient _client = new IOClient();
 
@@ -46,6 +45,27 @@ class IOHttpClient extends RestHttpClient {
   }
 
   @override
+  Future<Response> streamedRequest(
+      String method, String url, int length, Stream uploadStream,
+      {Map<String, String> headers}) async {
+    StreamSubscription subscription;
+    try {
+      StreamedRequest request = new StreamedRequest(method, Uri.parse(url));
+      request.contentLength = length;
+      if (headers != null) {
+        request.headers.addAll(headers);
+      }
+      subscription = uploadStream.listen(request.sink.add, onDone: () {
+        request.sink.close();
+        subscription.cancel();
+      });
+      return Response.fromStream(await _client.send(request));
+    } finally {
+      if (subscription != null) subscription.cancel();
+    }
+  }
+
+  @override
   Future<Response> post(String url, data, {Map<String, String> headers}) {
     return _client.post(url, headers: headers, body: data);
   }
@@ -60,8 +80,8 @@ class IOHttpClient extends RestHttpClient {
     return _client.head(url, headers: headers);
   }
 
-  Request _createRequest(String method, String url, dynamic data,
-      Map<String, String> headers) {
+  Request _createRequest(
+      String method, String url, dynamic data, Map<String, String> headers) {
     Request request = new Request(method, Uri.parse(url));
     if (headers != null) {
       request.headers.addAll(headers);
@@ -71,5 +91,4 @@ class IOHttpClient extends RestHttpClient {
     }
     return request;
   }
-
 }

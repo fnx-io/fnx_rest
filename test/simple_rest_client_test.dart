@@ -172,13 +172,12 @@ void main() {
       RestClient r =
           new RestClient(httpClient, null, "a.c/", headers: {'a': 'a'});
       r.get(headers: {'b': 'b'});
-      verify(httpClient.get('a.c/',
-          headers: {
-            'a': 'a',
-            'b': 'b',
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          }));
+      verify(httpClient.get('a.c/', headers: {
+        'a': 'a',
+        'b': 'b',
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }));
     });
     test("passes body data correctly", () {
       MockHttpClient httpClient = successReturningHttpClient();
@@ -462,7 +461,7 @@ MockHttpClient successReturningHttpClient({ResponseFactory respFactory}) {
   MockHttpClient httpClient = new MockHttpClient();
   if (respFactory == null) respFactory = buildMockResponse;
   when(httpClient.get(any,
-      data: anyNamed("data"), headers: anyNamed("headers")))
+          data: anyNamed("data"), headers: anyNamed("headers")))
       .thenAnswer(respFactory);
   when(httpClient.delete(any,
           data: anyNamed("data"), headers: anyNamed("headers")))

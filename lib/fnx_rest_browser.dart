@@ -27,7 +27,6 @@ class BrowserRestClient extends RestClient {
       : super(new BrowserHttpClient(), parent, url);
 }
 
-
 class BrowserHttpClient extends RestHttpClient {
   http.BrowserClient _client = new http.BrowserClient();
 
@@ -60,8 +59,29 @@ class BrowserHttpClient extends RestHttpClient {
     return _client.head(url, headers: headers);
   }
 
-  Request _createRequest(String method, String url, dynamic data,
-      Map<String, String> headers) {
+  @override
+  Future<Response> streamedRequest(
+      String method, String url, int length, Stream uploadStream,
+      {Map<String, String> headers}) async {
+    StreamSubscription subscription;
+    try {
+      StreamedRequest request = new StreamedRequest(method, Uri.parse(url));
+      if (headers != null) {
+        request.headers.addAll(headers);
+      }
+      request.contentLength = length;
+      subscription = uploadStream.listen(request.sink.add, onDone: () {
+        request.sink.close();
+        subscription.cancel();
+      });
+      return Response.fromStream(await _client.send(request));
+    } finally {
+      if (subscription != null) subscription.cancel();
+    }
+  }
+
+  Request _createRequest(
+      String method, String url, dynamic data, Map<String, String> headers) {
     Request request = new Request(method, Uri.parse(url));
     if (headers != null) {
       request.headers.addAll(headers);
@@ -71,5 +91,4 @@ class BrowserHttpClient extends RestHttpClient {
     }
     return request;
   }
-
 }

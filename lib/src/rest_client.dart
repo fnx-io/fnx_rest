@@ -77,9 +77,8 @@ class RestClient {
     Map<String, String> allHeaders = _headersToSend(headers);
     _includeContentTypeHeader(allHeaders);
     _workStarted();
-    Future<Response> resp =
-    _httpClient.get(renderUrl(url, params), data: effProduces.serialize(data),
-        headers: allHeaders);
+    Future<Response> resp = _httpClient.get(renderUrl(url, params),
+        data: effProduces.serialize(data), headers: allHeaders);
     return handleResponse(resp);
   }
 
@@ -121,6 +120,17 @@ class RestClient {
     _workStarted();
     Future<Response> resp =
         _httpClient.head(renderUrl(url, params), headers: allHeaders);
+    return handleResponse(resp);
+  }
+
+  Future<RestResult> streamedRequest(
+      String method, int contentLength, Stream uploadStream,
+      {Map<String, String> headers}) {
+    Map<String, String> allHeaders = _headersToSend(headers);
+    _workStarted();
+    Future<Response> resp = _httpClient.streamedRequest(
+        method, renderUrl(url, params), contentLength, uploadStream,
+        headers: allHeaders);
     return handleResponse(resp);
   }
 
@@ -342,6 +352,9 @@ abstract class RestHttpClient {
   Future<Response> delete(String url,
       {dynamic data, Map<String, String> headers});
   Future<Response> head(String url, {Map<String, String> headers});
+  Future<Response> streamedRequest(
+      String method, String url, int length, Stream uploadStream,
+      {Map<String, String> headers});
 }
 
 ///
