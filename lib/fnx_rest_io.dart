@@ -14,6 +14,7 @@ library fnx_rest;
 import 'dart:async';
 
 import 'package:http/http.dart';
+import 'package:http/io_client.dart';
 import 'package:http/src/response.dart';
 
 import 'src/rest_client.dart';
@@ -23,31 +24,26 @@ export 'src/rest_listing.dart';
 
 class IoRestClient extends RestClient {
   IoRestClient.root(String url) : this(null, url);
-  IoRestClient(RestClient parent, String url)
-      : super(new IOHttpClient(), parent, url);
+  IoRestClient(RestClient parent, String url) : super(new IOHttpClient(), parent, url);
 }
 
 class IOHttpClient extends RestHttpClient {
   IOClient _client = new IOClient();
 
   @override
-  Future<Response> get(String url,
-      {dynamic data, Map<String, String> headers}) async {
+  Future<Response> get(String url, {dynamic data, Map<String, String> headers}) async {
     Request request = _createRequest("GET", url, data, headers);
     return Response.fromStream(await _client.send(request));
   }
 
   @override
-  Future<Response> delete(String url,
-      {dynamic data, Map<String, String> headers}) async {
+  Future<Response> delete(String url, {dynamic data, Map<String, String> headers}) async {
     Request request = _createRequest("DELETE", url, data, headers);
     return Response.fromStream(await _client.send(request));
   }
 
   @override
-  Future<Response> streamedRequest(
-      String method, String url, int length, Stream uploadStream,
-      {Map<String, String> headers}) async {
+  Future<Response> streamedRequest(String method, String url, int length, Stream uploadStream, {Map<String, String> headers}) async {
     StreamSubscription subscription;
     try {
       StreamedRequest request = new StreamedRequest(method, Uri.parse(url));
@@ -59,7 +55,7 @@ class IOHttpClient extends RestHttpClient {
         request.sink.close();
         subscription.cancel();
       });
-      return Response.fromStream(await _client.send(request));
+      return await Response.fromStream(await _client.send(request));
     } finally {
       if (subscription != null) subscription.cancel();
     }
@@ -80,8 +76,7 @@ class IOHttpClient extends RestHttpClient {
     return _client.head(url, headers: headers);
   }
 
-  Request _createRequest(
-      String method, String url, dynamic data, Map<String, String> headers) {
+  Request _createRequest(String method, String url, dynamic data, Map<String, String> headers) {
     Request request = new Request(method, Uri.parse(url));
     if (headers != null) {
       request.headers.addAll(headers);

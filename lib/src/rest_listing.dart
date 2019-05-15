@@ -29,7 +29,7 @@ class RestListing {
   bool get finishedWithError => _finishedWithError;
 
   /// Use this to indicate that next page should be loaded.
-  Future<bool> loadNextPage({clearPrevious: false}) async {
+  Future<bool> loadNextPage({clearPrevious = false}) async {
     if (finishedWithError) {
       return false;
     }
@@ -64,7 +64,7 @@ class RestListing {
     } catch (e) {
       _finishedWithError = true;
       _hasNext = false;
-      throw e;
+      rethrow;
     }
   }
 
