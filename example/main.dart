@@ -2,7 +2,8 @@ import 'package:fnx_rest/fnx_rest_io.dart';
 
 void main() async {
   // Init your Rest API client
-  RestClient apiRoot = new IoRestClient.root("https://jsonplaceholder.typicode.com"); // Use BrowserRestClient in browser ..
+  RestClient apiRoot = new IoRestClient.root(
+      "https://jsonplaceholder.typicode.com"); // Use BrowserRestClient in browser ..
 
   // configure global headers
   apiRoot.setHeader("Authorization", "FacelessMan");
