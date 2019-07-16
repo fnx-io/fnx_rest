@@ -140,11 +140,10 @@ void main() {
 
   group("When parsing responses", () {
     Future<RestResult> processResponse(Deserializer d, Future<Response> resp) {
-      return RestClient.processResponse(
-          new Accepts("some/thing", d, false), resp);
+      return RestClient.processResponse(new Accepts("some/thing", d), resp);
     }
 
-    Deserializer d = (dynamic v) => v is String ? int.parse(v) : -1;
+    Deserializer d = (Response r) => r.body is String ? int.parse(r.body) : -1;
     group("and deserializer is called", () {
       test("when the result is successful", () {
         Future<dynamic> r =
@@ -323,6 +322,35 @@ void main() {
         Future<dynamic> rr = rc.delete().then((RestResult rr) => rr.data);
         expect(rr, completion(equals(binaryData)));
       });
+    });
+  });
+
+  group("RestClient inherites properties", () {
+    test("GET inherites deserializer ", () async {
+      MockHttpClient httpClient = successReturningHttpClient(
+          respFactory: (Invocation i) =>
+              buildMockResponse(i, status: 200, binaryBody: binaryData));
+      RestClient rc = new RestClient(httpClient, null, "/");
+      final alwaysTheSamePayload = "payload";
+      rc.accepts("custom/type", (_) => alwaysTheSamePayload);
+
+      final rcChild = rc.child("childPath");
+      final resultData = (await rcChild.get()).successData;
+      expect(resultData, equals(alwaysTheSamePayload));
+    });
+    test("POST inherites serializer", () async {
+      MockHttpClient httpClient = successReturningHttpClient(
+          respFactory: (Invocation i) =>
+              buildMockResponse(i, status: 200, binaryBody: binaryData));
+      RestClient rc = new RestClient(httpClient, null, "/");
+      final alwaysTheSamePayload = "payload";
+      rc.produces("custom/type", (_) => alwaysTheSamePayload);
+      rc.accepts("custom/type", (_) => alwaysTheSamePayload);
+
+      final rcChild = rc.child("childPath");
+      await rcChild.post("whatever");
+      verify(httpClient.post(any, alwaysTheSamePayload,
+          headers: anyNamed("headers")));
     });
   });
 

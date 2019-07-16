@@ -2,9 +2,6 @@
 
 Set of REST tools which work nicely with Dart 2 / Angular.
 
-This is a plain old REST client, if you are looking for something more sophisticated,
-try [streamy](https://pub.dartlang.org/packages/streamy) for instance.
-
 fnx_rest is oriented to be developer and Angular friendly and is particularly useful
 when creating boring CRUD applications with many similar API calls. 
 
@@ -42,7 +39,7 @@ and inject this root client with Angular's dependency injection to your elements
 RestClient is hierarchical:
     
 ```dart
-    RestClient root = BrowseRestClient.root("/api/v1");   //  /api/v1
+    RestClient root = BrowserRestClient.root("/api/v1");   //  /api/v1
     RestClient users = root.child("/users");            //  /api/v1/users            
     RestClient john = users.child("/123");              //  /api/v1/users/123
 ```

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:http/http.dart';
 import 'package:http/src/response.dart';
 
 /// The rest client, this is the class you want to use.
@@ -46,28 +47,28 @@ class RestClient {
 
   /// Configure Accept header with appropriate [Deserializer].
   RestClient accepts(String mime, Deserializer deserializer) {
-    this._accepts = new Accepts.nonbinary(mime, deserializer);
+    this._accepts = new Accepts(mime, deserializer);
 
     return this;
   }
 
   /// Configure Accept header to receive binary data without any processing.
   RestClient acceptsBinary(String mime) {
-    this._accepts = new Accepts(mime, null, true);
+    this._accepts = new Accepts(mime, defaultBinaryDeserializer);
 
     return this;
   }
 
   /// Configure Content-Type header to submit data as List<int> without serialization.
   RestClient producesBinary(String mime) {
-    this._produces = new Produces(mime, null, true);
+    this._produces = new Produces(mime, defaultBinarySerializer);
 
     return this;
   }
 
   /// Configure Content-Type header with appropriate [Serializer].
   RestClient produces(String mime, Serializer serializer) {
-    this._produces = new Produces.nonbinary(mime, serializer);
+    this._produces = new Produces(mime, serializer);
 
     return this;
   }
@@ -146,16 +147,14 @@ class RestClient {
   }
 
   static Future<RestResult> processResponse(
-      Accepts accepts, Future<Response> resp) {
-    return resp.then((Response r) {
-      dynamic data = accepts.deserialize(r);
-      RestResult result = new RestResult(r.statusCode, data);
-      if (result.error) {
-        result.throwError();
-      } else {
-        return result;
-      }
-    });
+      Accepts accepts, Future<Response> resp) async {
+    Response r = await resp;
+    dynamic data = accepts.deserialize(r);
+    RestResult result = new RestResult(r.statusCode, data);
+    if (result.error) {
+      result.throwError();
+    }
+    return result;
   }
 
   String get url {
@@ -358,12 +357,12 @@ abstract class RestHttpClient {
 
 ///
 /// Defines function which si able to take Dart objects and serialize them for upload (POST, PUT).
-typedef dynamic Serializer(dynamic payload);
+typedef Serializer = dynamic Function(dynamic payload);
 
 ///
-/// Defines function which is able to take HTTP response body and deserialize is into a Dart object.
-/// Should return a String or List<int>.
-typedef dynamic Deserializer(String payload);
+/// Defines function which is able to take HTTP response and deserialize, possibly into a Dart object.
+/// Should return a String or List<int> or binary.
+typedef Deserializer = dynamic Function(Response response);
 
 RegExp microRemoval = new RegExp(r'\.[0-9]{0,6}');
 
@@ -377,7 +376,8 @@ Object toJsonEncodable(Object value) {
 
 ///
 /// Uses JSON.decode(...) from dart:convert.
-Deserializer defaultJsonDeserializer = (String payload) {
+Deserializer defaultJsonDeserializer = (Response response) {
+  final payload = response?.body;
   if (payload == null) {
     return null;
   } else if (payload is String) {
@@ -400,6 +400,11 @@ Serializer defaultJsonSerializer = (dynamic payload) {
     return json.encode(payload, toEncodable: toJsonEncodable);
   }
 };
+
+Deserializer defaultBinaryDeserializer =
+    (Response response) => response?.bodyBytes;
+
+Serializer defaultBinarySerializer = (dynamic payload) => payload;
 
 class RestClientException implements Exception {
   final String message;
@@ -472,20 +477,10 @@ class UrlParseResult {
 class Accepts {
   final String mime;
   final Deserializer deserializer;
-  final bool binary;
 
-  Accepts.nonbinary(String mime, Deserializer deserializer)
-      : this(mime, deserializer, false);
-  Accepts(this.mime, this.deserializer, this.binary);
+  Accepts(this.mime, this.deserializer);
 
-  dynamic deserialize(Response resp) {
-    if (binary) {
-      return resp.bodyBytes;
-    }
-    dynamic body = resp.body;
-    if (body == null) return null;
-    return deserializer(resp.body);
-  }
+  dynamic deserialize(Response resp) => deserializer(resp);
 }
 
 ///
@@ -494,17 +489,8 @@ class Accepts {
 class Produces {
   final String mime;
   final Serializer serializer;
-  final bool binary;
 
-  Produces.nonbinary(String mime, Serializer serializer)
-      : this(mime, serializer, false);
-  Produces(this.mime, this.serializer, this.binary);
+  Produces(this.mime, this.serializer);
 
-  dynamic serialize(dynamic payload) {
-    if (binary) {
-      return payload;
-    } else {
-      return serializer(payload);
-    }
-  }
+  dynamic serialize(dynamic payload) => serializer(payload);
 }
