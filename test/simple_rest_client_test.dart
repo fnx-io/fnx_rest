@@ -136,6 +136,14 @@ void main() {
       verify(client.get("/something?is=wrong&1=2&3=4",
           headers: anyNamed("headers")));
     });
+
+    test("are rendered in urlWithParams", () {
+      RestClient rc =
+          new RestClient(successReturningHttpClient(), null, "/something")
+              .setParam("param", "4");
+
+      expect(rc.urlWithParams, contains("param"));
+    });
   });
 
   group("When parsing responses", () {
@@ -351,6 +359,18 @@ void main() {
       await rcChild.post("whatever");
       verify(httpClient.post(any, alwaysTheSamePayload,
           headers: anyNamed("headers")));
+    });
+  });
+
+  group("Default serializer and deserializer", () {
+    test("not break on whitespace string", () async {
+      final whiteSpace = "      ";
+      MockHttpClient httpClient = successReturningHttpClient(
+          respFactory: (Invocation i) =>
+              buildMockResponse(i, status: 200, body: whiteSpace));
+      RestClient rc = new RestClient(httpClient, null, "/");
+      RestResult rr = await rc.post(whiteSpace);
+      expect(rr.success, isTrue);
     });
   });
 

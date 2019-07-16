@@ -157,9 +157,9 @@ class RestClient {
     return result;
   }
 
-  String get url {
-    return joinUrls(_parent?.url, _url);
-  }
+  String get url => joinUrls(_parent?.url, _url);
+
+  String get urlWithParams => renderUrl(url, params);
 
   static RegExp SLASH_CHAR = new RegExp(r'\/');
 
@@ -381,7 +381,7 @@ Deserializer defaultJsonDeserializer = (Response response) {
   if (payload == null) {
     return null;
   } else if (payload is String) {
-    if (payload.isEmpty) {
+    if (payload.trim().isEmpty) {
       return null;
     } else {
       return json.decode(payload);
@@ -394,7 +394,7 @@ Deserializer defaultJsonDeserializer = (Response response) {
 ///
 /// Uses JSON.encode(...) from dart:convert.
 Serializer defaultJsonSerializer = (dynamic payload) {
-  if (payload == null) {
+  if (payload == null || (payload is String && payload.trim().isEmpty)) {
     return null;
   } else {
     return json.encode(payload, toEncodable: toJsonEncodable);

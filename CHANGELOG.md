@@ -2,8 +2,10 @@
 
 ## 3.0.0
 
-More flexible serializers and deserializers. 
-Breaking change only if you implement your own custom serializers or deserializers.
+* More flexible serializers and deserializers. (_Breaking api change if you implement your own custom serializers or deserializers_)
+* Added `urlWithParams` getter for simpler access to url rendered with parameters
+* Default json de/serializers now not throw on whitespace string  
+* Updated readme
 
 ## 2.2.0
 
