@@ -32,7 +32,7 @@ class RestClient {
   int _workingCount = 0;
 
   StreamController<bool> _workingStreamController =
-  new StreamController.broadcast();
+      new StreamController.broadcast();
 
   Stream<bool> get workingStream => _workingStreamController.stream;
 
@@ -132,7 +132,7 @@ class RestClient {
     Map<String, String> allHeaders = _headersToSend(headers);
     _workStarted();
     Future<Response> resp =
-    _httpClient.head(renderUrl(url, params), headers: allHeaders);
+        _httpClient.head(renderUrl(url, params), headers: allHeaders);
     return handleResponse(resp);
   }
 

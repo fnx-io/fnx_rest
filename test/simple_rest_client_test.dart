@@ -167,8 +167,8 @@ void main() {
       });
       test("when the result is failure", () {
         Future<dynamic> r =
-        processResponse(d, buildMockResponse(null, status: 500, body: "1"))
-            .then((RestResult r) => r.data);
+            processResponse(d, buildMockResponse(null, status: 500, body: "1"))
+                .then((RestResult r) => r.data);
         expect(r, completion(equals(1)));
       });
     });
