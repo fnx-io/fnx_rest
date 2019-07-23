@@ -165,11 +165,12 @@ void main() {
                 .then((RestResult r) => r.data);
         expect(r, completion(equals(1)));
       });
-    });
-    test("and the status is > 500, it throws HttpException", () {
-      Future<RestResult> r =
-          processResponse(d, buildMockResponse(null, status: 500, body: "1"));
-      expect(r, throwsA(equals(new TypeMatcher<HttpException>())));
+      test("when the result is failure", () {
+        Future<dynamic> r =
+        processResponse(d, buildMockResponse(null, status: 500, body: "1"))
+            .then((RestResult r) => r.data);
+        expect(r, completion(equals(1)));
+      });
     });
   });
 
@@ -352,7 +353,7 @@ void main() {
               buildMockResponse(i, status: 200, binaryBody: binaryData));
       RestClient rc = new RestClient(httpClient, null, "/");
       final alwaysTheSamePayload = "payload";
-      rc.produces("custom/type", (_) => alwaysTheSamePayload);
+      rc.produces("custom/type", (_, __) => alwaysTheSamePayload);
       rc.accepts("custom/type", (_) => alwaysTheSamePayload);
 
       final rcChild = rc.child("childPath");
@@ -362,7 +363,7 @@ void main() {
     });
   });
 
-  group("Default serializer and deserializer", () {
+  group("Serializer and deserializer", () {
     test("not break on whitespace string", () async {
       final whiteSpace = "      ";
       MockHttpClient httpClient = successReturningHttpClient(
@@ -371,6 +372,42 @@ void main() {
       RestClient rc = new RestClient(httpClient, null, "/");
       RestResult rr = await rc.post(whiteSpace);
       expect(rr.success, isTrue);
+    });
+
+    test("Serializer can modify headers in GET", () {
+      MockHttpClient httpClient = successReturningHttpClient();
+      RestClient r =
+          new RestClient(httpClient, null, "a.c/", headers: {'a': 'a'});
+      r.produces("huhle/debuz", (_, h) {
+        h['X-Huhle'] = "Debuz";
+        return "Yessir";
+      });
+      r.get(headers: {'b': 'b'});
+      verify(httpClient.get('a.c/', data: "Yessir", headers: {
+        'a': 'a',
+        'b': 'b',
+        'X-Huhle': 'Debuz',
+        'Accept': 'application/json',
+        'Content-Type': 'huhle/debuz'
+      }));
+    });
+
+    test("Serializer can modify headers in POST", () {
+      MockHttpClient httpClient = successReturningHttpClient();
+      RestClient r =
+          new RestClient(httpClient, null, "a.c/", headers: {'a': 'a'});
+      r.produces("huhle/debuz", (_, h) {
+        h['X-Huhle'] = "Debuz";
+        return "Yessir";
+      });
+      r.post("Whateva", headers: {'b': 'b'});
+      verify(httpClient.post('a.c/', "Yessir", headers: {
+        'a': 'a',
+        'b': 'b',
+        'X-Huhle': 'Debuz',
+        'Accept': 'application/json',
+        'Content-Type': 'huhle/debuz'
+      }));
     });
   });
 

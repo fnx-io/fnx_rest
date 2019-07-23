@@ -118,6 +118,7 @@ desired type (see below) - Dart Map or Dart List by default.
 
 By default, the root client is configured to produce and consume JSON and
 Dart Maps and Lists.
+
 You can easily customize this behaviour to accept or produce any binary data:
  
 ```dart
@@ -126,20 +127,21 @@ You can easily customize this behaviour to accept or produce any binary data:
     img.producesBinary("image/png");
 ```
     
-Such data will be sent and received as `List<int>` or
-inject any custom text based serialization or deserialization you need:
+Such data will be sent and received as `List<int>`.
+ 
+You can also inject any custom serialization or deserialization you need:
 
 ```dart
     /*
-    typedef dynamic Serializer(dynamic payload);
-    typedef dynamic Deserializer(String payload);
+    typedef Serializer = dynamic Function(dynamic payload, Map<String, String> requestHeaders);
+    typedef Deserializer = dynamic Function(Response response);
     */
 
-    client.accepts("text/csv", myCsvDeserializeFunction);
-    client.produces("text/csv", myCsvSerializeFunction);
+    client.accepts("text/csv", myCsvDeserializer);
+    client.produces("text/csv", myCsvSerializer);
 ```
     
-This configuration is inherited by client's children.                        
+This configuration is inherited by client's children.                         
                 
 ## Work in progress
                 
