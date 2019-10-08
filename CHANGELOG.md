@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.2.0
+
+* RestResult now allows you to access response headers.
+
 ## 3.1.0
 
 * serializers can now modify outgoing headers

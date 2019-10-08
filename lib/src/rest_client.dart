@@ -162,7 +162,7 @@ class RestClient {
       Accepts accepts, Future<Response> resp) async {
     Response r = await resp;
     dynamic data = accepts.deserialize(r);
-    RestResult result = new RestResult(r.statusCode, data);
+    RestResult result = new RestResult(r.statusCode, data, r.headers);
     return result;
   }
 
@@ -423,7 +423,9 @@ class RestResult {
   /// Deserialized response body.
   final dynamic data;
 
-  RestResult(this.status, this.data);
+  final Map<String, String> headers;
+
+  RestResult(this.status, this.data, this.headers);
 
   /// Convenient interpretation of HTTP status (>=200 && < 300)
   bool get success => 200 <= status && status < 300;
