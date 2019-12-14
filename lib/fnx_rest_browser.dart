@@ -24,11 +24,11 @@ export 'src/rest_listing.dart';
 class BrowserRestClient extends RestClient {
   BrowserRestClient.root(String url) : this(null, url);
   BrowserRestClient(RestClient parent, String url)
-      : super(new BrowserHttpClient(), parent, url);
+      : super(BrowserHttpClient(), parent, url);
 }
 
 class BrowserHttpClient extends RestHttpClient {
-  http.BrowserClient _client = new http.BrowserClient();
+  http.BrowserClient _client = http.BrowserClient();
 
   @override
   Future<Response> get(String url,
@@ -65,7 +65,7 @@ class BrowserHttpClient extends RestHttpClient {
       {Map<String, String> headers}) async {
     StreamSubscription subscription;
     try {
-      StreamedRequest request = new StreamedRequest(method, Uri.parse(url));
+      StreamedRequest request = StreamedRequest(method, Uri.parse(url));
       if (headers != null) {
         request.headers.addAll(headers);
       }
@@ -82,7 +82,7 @@ class BrowserHttpClient extends RestHttpClient {
 
   Request _createRequest(
       String method, String url, dynamic data, Map<String, String> headers) {
-    Request request = new Request(method, Uri.parse(url));
+    Request request = Request(method, Uri.parse(url));
     if (headers != null) {
       request.headers.addAll(headers);
     }
