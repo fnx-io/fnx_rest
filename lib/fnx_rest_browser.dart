@@ -76,7 +76,7 @@ class BrowserHttpClient extends RestHttpClient {
       });
       return Response.fromStream(await _client.send(request));
     } finally {
-      if (subscription != null) subscription.cancel();
+      await subscription?.cancel();
     }
   }
 

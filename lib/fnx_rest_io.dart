@@ -62,7 +62,7 @@ class IOHttpClient extends RestHttpClient {
       });
       return await Response.fromStream(await _client.send(request));
     } finally {
-      if (subscription != null) subscription.cancel();
+      await subscription?.cancel();
     }
   }
 
