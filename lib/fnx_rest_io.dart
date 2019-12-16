@@ -16,6 +16,7 @@ import 'dart:async';
 import 'package:http/http.dart';
 import 'package:http/io_client.dart';
 import 'package:http/src/response.dart';
+import 'package:pedantic/pedantic.dart';
 
 import 'src/rest_client.dart';
 
@@ -24,34 +25,29 @@ export 'src/rest_listing.dart';
 
 class IoRestClient extends RestClient {
   IoRestClient.root(String url) : this(null, url);
-  IoRestClient(RestClient parent, String url)
-      : super(IOHttpClient(), parent, url);
+  IoRestClient(RestClient parent, String url) : super(IOHttpClient(), parent, url);
 }
 
 class IOHttpClient extends RestHttpClient {
-  IOClient _client = IOClient();
+  final IOClient _client = IOClient();
 
   @override
-  Future<Response> get(String url,
-      {dynamic data, Map<String, String> headers}) async {
-    Request request = _createRequest("GET", url, data, headers);
+  Future<Response> get(String url, {dynamic data, Map<String, String> headers}) async {
+    var request = _createRequest('GET', url, data, headers);
     return Response.fromStream(await _client.send(request));
   }
 
   @override
-  Future<Response> delete(String url,
-      {dynamic data, Map<String, String> headers}) async {
-    Request request = _createRequest("DELETE", url, data, headers);
+  Future<Response> delete(String url, {dynamic data, Map<String, String> headers}) async {
+    var request = _createRequest('DELETE', url, data, headers);
     return Response.fromStream(await _client.send(request));
   }
 
   @override
-  Future<Response> streamedRequest(
-      String method, String url, int length, Stream uploadStream,
-      {Map<String, String> headers}) async {
+  Future<Response> streamedRequest(String method, String url, int length, Stream uploadStream, {Map<String, String> headers}) async {
     StreamSubscription subscription;
     try {
-      StreamedRequest request = StreamedRequest(method, Uri.parse(url));
+      var request = StreamedRequest(method, Uri.parse(url));
       request.contentLength = length;
       if (headers != null) {
         request.headers.addAll(headers);
@@ -62,7 +58,7 @@ class IOHttpClient extends RestHttpClient {
       });
       return await Response.fromStream(await _client.send(request));
     } finally {
-      if (subscription != null) subscription.cancel();
+      unawaited(subscription?.cancel());
     }
   }
 
@@ -81,9 +77,8 @@ class IOHttpClient extends RestHttpClient {
     return _client.head(url, headers: headers);
   }
 
-  Request _createRequest(
-      String method, String url, dynamic data, Map<String, String> headers) {
-    Request request = Request(method, Uri.parse(url));
+  Request _createRequest(String method, String url, dynamic data, Map<String, String> headers) {
+    var request = Request(method, Uri.parse(url));
     if (headers != null) {
       request.headers.addAll(headers);
     }

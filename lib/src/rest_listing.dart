@@ -9,7 +9,7 @@ import 'package:fnx_rest/src/rest_client.dart';
 /// It accepts [RestListingDriver] which handles paging for requests and unpacking
 /// final List of data from returned response
 class RestListing {
-  RestClient rest;
+  RestClient _rest;
 
   List<dynamic> list = [];
   int page = 0;
@@ -19,12 +19,12 @@ class RestListing {
   int _version = 0;
   RestListingDriver _driver;
 
-  RestListing(RestClient rest, RestListingDriver driver) {
-    this.rest = rest.child('');
-    this._driver = driver;
+  RestListing(RestClient restBase, RestListingDriver driver) {
+    _rest = restBase.child('');
+    _driver = driver;
   }
 
-  bool get working => rest.working;
+  bool get working => _rest.working;
   bool get hasNext => _hasNext;
   bool get finishedWithError => _finishedWithError;
 
@@ -37,11 +37,11 @@ class RestListing {
       return false;
     }
 
-    RestClient client = _driver.prepareClient(rest, page);
+    var client = _driver.prepareClient(_rest, page);
 
     try {
-      int reqVersion = _version;
-      RestResult rr = await client.get();
+      var reqVersion = _version;
+      var rr = await client.get();
       if (_version != reqVersion) return false;
       if (rr.error || rr.failure) {
         _finishedWithError = true;
@@ -49,7 +49,7 @@ class RestListing {
         return false;
       }
 
-      UnpackedData data = _driver.unpackData(rr.data);
+      var data = _driver.unpackData(rr.data);
       page++;
 
       if (clearPrevious) {
