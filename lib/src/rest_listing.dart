@@ -103,7 +103,7 @@ class SimpleListDriver implements RestListingDriver {
   @override
   UnpackedData unpackData(dynamic data) {
     data = data ?? [];
-    return new UnpackedData(data.isNotEmpty, data);
+    return UnpackedData(data.isNotEmpty, data);
   }
 
   static RestClient queryParamPager(RestClient client, int page) {
@@ -127,7 +127,7 @@ class ListResultDriver implements RestListingDriver {
         throw "Expected 'data' key to be a List, but was $data['data']";
       }
       List<dynamic> list = data['data'] ?? [];
-      return new UnpackedData(list.isNotEmpty, list);
+      return UnpackedData(list.isNotEmpty, list);
     } else {
       throw "Expected result to be a map with 'data' key containing results";
     }

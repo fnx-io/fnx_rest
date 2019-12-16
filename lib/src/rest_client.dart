@@ -15,7 +15,7 @@ typedef Serializer = dynamic Function(
 typedef Deserializer = dynamic Function(Response response);
 
 /// The rest client, this is the class you want to use.
-/// On web use the [new HttpRestClient.root] constructor to obtain preconfigured
+/// On web use the [HttpRestClient.root] constructor to obtain preconfigured
 /// RestClient.
 ///
 class RestClient {
@@ -32,7 +32,7 @@ class RestClient {
   int _workingCount = 0;
 
   StreamController<bool> _workingStreamController =
-      new StreamController.broadcast();
+      StreamController.broadcast();
 
   Stream<bool> get workingStream => _workingStreamController.stream;
 
@@ -52,33 +52,33 @@ class RestClient {
   }
 
   RestClient child(String urlPart, {Map<String, String> headers}) {
-    return new RestClient(_httpClient, this, urlPart, headers: headers);
+    return RestClient(_httpClient, this, urlPart, headers: headers);
   }
 
   /// Configure Accept header with appropriate [Deserializer].
   RestClient accepts(String mime, Deserializer deserializer) {
-    this._accepts = new Accepts(mime, deserializer);
+    this._accepts = Accepts(mime, deserializer);
 
     return this;
   }
 
   /// Configure Accept header to receive binary data without any processing.
   RestClient acceptsBinary(String mime) {
-    this._accepts = new Accepts(mime, defaultBinaryDeserializer);
+    this._accepts = Accepts(mime, defaultBinaryDeserializer);
 
     return this;
   }
 
   /// Configure Content-Type header to submit data as List<int> without serialization.
   RestClient producesBinary(String mime) {
-    this._produces = new Produces(mime, defaultBinarySerializer);
+    this._produces = Produces(mime, defaultBinarySerializer);
 
     return this;
   }
 
   /// Configure Content-Type header with appropriate [Serializer].
   RestClient produces(String mime, Serializer serializer) {
-    this._produces = new Produces(mime, serializer);
+    this._produces = Produces(mime, serializer);
 
     return this;
   }
@@ -162,7 +162,7 @@ class RestClient {
       Accepts accepts, Future<Response> resp) async {
     Response r = await resp;
     dynamic data = accepts.deserialize(r);
-    RestResult result = new RestResult(r.statusCode, data, r.headers);
+    RestResult result = RestResult(r.statusCode, data, r.headers);
     return result;
   }
 
@@ -170,11 +170,11 @@ class RestClient {
 
   String get urlWithParams => renderUrl(url, params);
 
-  static RegExp SLASH_CHAR = new RegExp(r'\/');
+  static RegExp SLASH_CHAR = RegExp(r'\/');
 
   static UrlParseResult parseUrl(String url) {
     if (url == null || url.isEmpty) {
-      return new UrlParseResult('', {});
+      return UrlParseResult('', {});
     } else {
       Uri parsed = Uri.parse(url);
       Map<String, dynamic> parsedParams = {};
@@ -187,7 +187,7 @@ class RestClient {
       String plainUrl = plain.toString();
       if (plainUrl.endsWith('?'))
         plainUrl = plainUrl.substring(0, plainUrl.length - 1);
-      return new UrlParseResult(plainUrl, parsedParams);
+      return UrlParseResult(plainUrl, parsedParams);
     }
   }
 
@@ -349,7 +349,7 @@ class RestClient {
 ///
 /// Create your own implementation of this class if you
 /// need to inject your own HTTP client into RestClient.
-/// On server, for example. See [new RestClient].
+/// On server, for example. See [RestClient].
 ///
 abstract class RestHttpClient {
   Future<Response> get(String url, {dynamic data, Map<String, String> headers});
@@ -364,7 +364,7 @@ abstract class RestHttpClient {
       {Map<String, String> headers});
 }
 
-RegExp microRemoval = new RegExp(r'\.[0-9]{0,6}');
+RegExp microRemoval = RegExp(r'\.[0-9]{0,6}');
 
 Object toJsonEncodable(Object value) {
   if (value is DateTime) {
@@ -387,7 +387,7 @@ Deserializer defaultJsonDeserializer = (Response response) {
       return json.decode(payload);
     }
   } else {
-    throw new RestClientException("Payload should be string if parsed as JSON");
+    throw RestClientException("Payload should be string if parsed as JSON");
   }
 };
 
@@ -456,7 +456,7 @@ class RestResult {
   }
 
   void throwError() {
-    throw new HttpException(status, data);
+    throw HttpException(status, data);
   }
 }
 

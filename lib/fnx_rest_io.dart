@@ -25,11 +25,11 @@ export 'src/rest_listing.dart';
 class IoRestClient extends RestClient {
   IoRestClient.root(String url) : this(null, url);
   IoRestClient(RestClient parent, String url)
-      : super(new IOHttpClient(), parent, url);
+      : super(IOHttpClient(), parent, url);
 }
 
 class IOHttpClient extends RestHttpClient {
-  IOClient _client = new IOClient();
+  IOClient _client = IOClient();
 
   @override
   Future<Response> get(String url,
@@ -51,7 +51,7 @@ class IOHttpClient extends RestHttpClient {
       {Map<String, String> headers}) async {
     StreamSubscription subscription;
     try {
-      StreamedRequest request = new StreamedRequest(method, Uri.parse(url));
+      StreamedRequest request = StreamedRequest(method, Uri.parse(url));
       request.contentLength = length;
       if (headers != null) {
         request.headers.addAll(headers);
@@ -83,7 +83,7 @@ class IOHttpClient extends RestHttpClient {
 
   Request _createRequest(
       String method, String url, dynamic data, Map<String, String> headers) {
-    Request request = new Request(method, Uri.parse(url));
+    Request request = Request(method, Uri.parse(url));
     if (headers != null) {
       request.headers.addAll(headers);
     }
