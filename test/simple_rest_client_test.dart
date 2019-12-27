@@ -5,7 +5,20 @@ import 'package:http/http.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
 
-List<int> binaryData = [0x48, 0x65, 0x6C, 0x6C, 0x6F, 0x20, 0x77, 0x6F, 0x72, 0x6C, 0x64, 0x21];
+List<int> binaryData = [
+  0x48,
+  0x65,
+  0x6C,
+  0x6C,
+  0x6F,
+  0x20,
+  0x77,
+  0x6F,
+  0x72,
+  0x6C,
+  0x64,
+  0x21
+];
 
 void main() {
   var r = RestClient(null, null, 'a.c/', headers: {'a': 'a', 'b': 'b'});
@@ -29,13 +42,17 @@ void main() {
       expect(RestClient(null, null, null, headers: {}).headers, equals({}));
     });
     test('are preserved', () {
-      expect(RestClient(null, null, null, headers: {'b': 'b', 'c': 'c'}).headers, equals({'b': 'b', 'c': 'c'}));
+      expect(
+          RestClient(null, null, null, headers: {'b': 'b', 'c': 'c'}).headers,
+          equals({'b': 'b', 'c': 'c'}));
     });
     test("are merged with parent's", () {
-      expect(r.child('/a', headers: {'c': 'c'}).headers, equals({'a': 'a', 'b': 'b', 'c': 'c'}));
+      expect(r.child('/a', headers: {'c': 'c'}).headers,
+          equals({'a': 'a', 'b': 'b', 'c': 'c'}));
     });
     test('overwrite same headers from parent', () {
-      expect(r.child('/a', headers: {'b': 'bb'}).headers, equals({'a': 'a', 'b': 'bb'}));
+      expect(r.child('/a', headers: {'b': 'bb'}).headers,
+          equals({'a': 'a', 'b': 'bb'}));
     });
   });
 
@@ -53,10 +70,13 @@ void main() {
       var rc = RestClient(null, null, null);
       rc.setParams('a', ['1', '2']);
 
-      expect(() => rc.getParam('a'), throwsA(contains('Invalid parameter type')));
+      expect(
+          () => rc.getParam('a'), throwsA(contains('Invalid parameter type')));
     });
 
-    test('if single param accessed by getParams, it is converted to list automatically', () {
+    test(
+        'if single param accessed by getParams, it is converted to list automatically',
+        () {
       var rc = RestClient(null, null, null);
       rc.setParam('a', 'b');
       expect(rc.getParams('a'), equals(['b']));
@@ -110,11 +130,13 @@ void main() {
       rc.setParam('3', '4');
 
       rc.get();
-      verify(client.get('/something?is=wrong&1=2&3=4', headers: anyNamed('headers')));
+      verify(client.get('/something?is=wrong&1=2&3=4',
+          headers: anyNamed('headers')));
     });
 
     test('are rendered in urlWithParams', () {
-      var rc = RestClient(successReturningHttpClient(), null, '/something').setParam('param', '4');
+      var rc = RestClient(successReturningHttpClient(), null, '/something')
+          .setParam('param', '4');
 
       expect(rc.urlWithParams, contains('param'));
     });
@@ -128,15 +150,21 @@ void main() {
     Deserializer d = (Response r) => r.body is String ? int.parse(r.body) : -1;
     group('and deserializer is called', () {
       test('when the result is successful', () {
-        var r = processResponse(d, buildMockResponse(null, status: 200, body: '1')).then((RestResult r) => r.data);
+        var r =
+            processResponse(d, buildMockResponse(null, status: 200, body: '1'))
+                .then((RestResult r) => r.data);
         expect(r, completion(equals(1)));
       });
       test('when the result is failure', () {
-        var r = processResponse(d, buildMockResponse(null, status: 401, body: '1')).then((RestResult r) => r.data);
+        var r =
+            processResponse(d, buildMockResponse(null, status: 401, body: '1'))
+                .then((RestResult r) => r.data);
         expect(r, completion(equals(1)));
       });
       test('when the result is failure', () {
-        var r = processResponse(d, buildMockResponse(null, status: 500, body: '1')).then((RestResult r) => r.data);
+        var r =
+            processResponse(d, buildMockResponse(null, status: 500, body: '1'))
+                .then((RestResult r) => r.data);
         expect(r, completion(equals(1)));
       });
     });
@@ -147,14 +175,20 @@ void main() {
       var httpClient = successReturningHttpClient();
       var r = RestClient(httpClient, null, 'a.c/', headers: {'a': 'a'});
       r.get(headers: {'b': 'b'});
-      verify(httpClient.get('a.c/', headers: {'a': 'a', 'b': 'b', 'Accept': 'application/json', 'Content-Type': 'application/json'}));
+      verify(httpClient.get('a.c/', headers: {
+        'a': 'a',
+        'b': 'b',
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }));
     });
     test('passes body data correctly', () {
       var httpClient = successReturningHttpClient();
       var r = RestClient(httpClient, null, 'a.c/');
       r.get(data: {'punk': 'floid'});
       var dataJSON = '{"punk":"floid"}';
-      verify(httpClient.get('a.c/', data: dataJSON, headers: anyNamed('headers')));
+      verify(
+          httpClient.get('a.c/', data: dataJSON, headers: anyNamed('headers')));
     });
   });
 
@@ -164,7 +198,12 @@ void main() {
       var r = RestClient(httpClient, null, 'a.c/', headers: {'a': 'a'});
       r.post({'zz': 'top'}, headers: {'b': 'b'});
       var reqJSON = '{"zz":"top"}';
-      verify(httpClient.post('a.c/', reqJSON, headers: {'a': 'a', 'b': 'b', 'Accept': 'application/json', 'Content-Type': 'application/json'}));
+      verify(httpClient.post('a.c/', reqJSON, headers: {
+        'a': 'a',
+        'b': 'b',
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }));
     });
   });
 
@@ -174,7 +213,12 @@ void main() {
       var r = RestClient(httpClient, null, 'a.c/', headers: {'a': 'a'});
       r.put({'zz': 'top'}, headers: {'b': 'b'});
       var reqJSON = '{"zz":"top"}';
-      verify(httpClient.put('a.c/', reqJSON, headers: {'a': 'a', 'b': 'b', 'Accept': 'application/json', 'Content-Type': 'application/json'}));
+      verify(httpClient.put('a.c/', reqJSON, headers: {
+        'a': 'a',
+        'b': 'b',
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }));
     });
   });
 
@@ -183,7 +227,12 @@ void main() {
       var httpClient = successReturningHttpClient();
       var r = RestClient(httpClient, null, 'a.c/', headers: {'a': 'a'});
       r.delete(headers: {'b': 'b'});
-      verify(httpClient.delete('a.c/', data: null, headers: {'a': 'a', 'b': 'b', 'Accept': 'application/json', 'Content-Type': 'application/json'}));
+      verify(httpClient.delete('a.c/', data: null, headers: {
+        'a': 'a',
+        'b': 'b',
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }));
     });
   });
 
@@ -192,13 +241,16 @@ void main() {
       var httpClient = successReturningHttpClient();
       var r = RestClient(httpClient, null, 'a.c/', headers: {'a': 'a'});
       r.head(headers: {'b': 'b'});
-      verify(httpClient.head('a.c/', headers: {'a': 'a', 'b': 'b', 'Accept': 'application/json'}));
+      verify(httpClient.head('a.c/',
+          headers: {'a': 'a', 'b': 'b', 'Accept': 'application/json'}));
     });
   });
 
   group('RestClient supports binary content-types', () {
     test('GET can passthrough binary response', () {
-      var httpClient = successReturningHttpClient(respFactory: (Invocation i) => buildMockResponse(i, status: 200, binaryBody: binaryData));
+      var httpClient = successReturningHttpClient(
+          respFactory: (Invocation i) =>
+              buildMockResponse(i, status: 200, binaryBody: binaryData));
       var rc = RestClient(httpClient, null, '/');
       rc.acceptsBinary('image/png');
       var futRr = rc.get();
@@ -208,7 +260,9 @@ void main() {
     });
     group('POST', () {
       test('can make binary requests', () {
-        var httpClient = successReturningHttpClient(respFactory: (Invocation i) => buildMockResponse(i, status: 200, binaryBody: binaryData));
+        var httpClient = successReturningHttpClient(
+            respFactory: (Invocation i) =>
+                buildMockResponse(i, status: 200, binaryBody: binaryData));
         var rc = RestClient(httpClient, null, '/');
         rc.producesBinary('image/png');
         rc.acceptsBinary('image/png');
@@ -217,7 +271,9 @@ void main() {
       });
 
       test('can receive binary responses', () {
-        var httpClient = successReturningHttpClient(respFactory: (Invocation i) => buildMockResponse(i, status: 200, binaryBody: binaryData));
+        var httpClient = successReturningHttpClient(
+            respFactory: (Invocation i) =>
+                buildMockResponse(i, status: 200, binaryBody: binaryData));
         var rc = RestClient(httpClient, null, '/');
         rc.producesBinary('image/png');
         rc.acceptsBinary('image/png');
@@ -229,7 +285,9 @@ void main() {
 
     group('PUT', () {
       test('can make binary requests', () {
-        var httpClient = successReturningHttpClient(respFactory: (Invocation i) => buildMockResponse(i, status: 200, binaryBody: binaryData));
+        var httpClient = successReturningHttpClient(
+            respFactory: (Invocation i) =>
+                buildMockResponse(i, status: 200, binaryBody: binaryData));
         var rc = RestClient(httpClient, null, '/');
         rc.producesBinary('image/png');
         rc.acceptsBinary('image/png');
@@ -238,7 +296,9 @@ void main() {
       });
 
       test('can receive binary responses', () {
-        var httpClient = successReturningHttpClient(respFactory: (Invocation i) => buildMockResponse(i, status: 200, binaryBody: binaryData));
+        var httpClient = successReturningHttpClient(
+            respFactory: (Invocation i) =>
+                buildMockResponse(i, status: 200, binaryBody: binaryData));
         var rc = RestClient(httpClient, null, '/');
         rc.producesBinary('image/png');
         rc.acceptsBinary('image/png');
@@ -250,7 +310,9 @@ void main() {
 
     group('DELETE', () {
       test('can receive binary responses', () {
-        var httpClient = successReturningHttpClient(respFactory: (Invocation i) => buildMockResponse(i, status: 200, binaryBody: binaryData));
+        var httpClient = successReturningHttpClient(
+            respFactory: (Invocation i) =>
+                buildMockResponse(i, status: 200, binaryBody: binaryData));
         var rc = RestClient(httpClient, null, '/');
         rc.producesBinary('image/png');
         rc.acceptsBinary('image/png');
@@ -263,7 +325,9 @@ void main() {
 
   group('RestClient inherites properties', () {
     test('GET inherites deserializer ', () async {
-      var httpClient = successReturningHttpClient(respFactory: (Invocation i) => buildMockResponse(i, status: 200, binaryBody: binaryData));
+      var httpClient = successReturningHttpClient(
+          respFactory: (Invocation i) =>
+              buildMockResponse(i, status: 200, binaryBody: binaryData));
       var rc = RestClient(httpClient, null, '/');
       final alwaysTheSamePayload = 'payload';
       rc.accepts('custom/type', (_) => alwaysTheSamePayload);
@@ -273,7 +337,9 @@ void main() {
       expect(resultData, equals(alwaysTheSamePayload));
     });
     test('POST inherites serializer', () async {
-      var httpClient = successReturningHttpClient(respFactory: (Invocation i) => buildMockResponse(i, status: 200, binaryBody: binaryData));
+      var httpClient = successReturningHttpClient(
+          respFactory: (Invocation i) =>
+              buildMockResponse(i, status: 200, binaryBody: binaryData));
       var rc = RestClient(httpClient, null, '/');
       final alwaysTheSamePayload = 'payload';
       rc.produces('custom/type', (_, __) => alwaysTheSamePayload);
@@ -281,14 +347,17 @@ void main() {
 
       final rcChild = rc.child('childPath');
       await rcChild.post('whatever');
-      verify(httpClient.post(any, alwaysTheSamePayload, headers: anyNamed('headers')));
+      verify(httpClient.post(any, alwaysTheSamePayload,
+          headers: anyNamed('headers')));
     });
   });
 
   group('Serializer and deserializer', () {
     test('not break on whitespace string', () async {
       final whiteSpace = '      ';
-      var httpClient = successReturningHttpClient(respFactory: (Invocation i) => buildMockResponse(i, status: 200, body: whiteSpace));
+      var httpClient = successReturningHttpClient(
+          respFactory: (Invocation i) =>
+              buildMockResponse(i, status: 200, body: whiteSpace));
       var rc = RestClient(httpClient, null, '/');
       var rr = await rc.post(whiteSpace);
       expect(rr.success, isTrue);
@@ -302,7 +371,13 @@ void main() {
         return 'Yessir';
       });
       r.get(headers: {'b': 'b'});
-      verify(httpClient.get('a.c/', data: 'Yessir', headers: {'a': 'a', 'b': 'b', 'X-Huhle': 'Debuz', 'Accept': 'application/json', 'Content-Type': 'huhle/debuz'}));
+      verify(httpClient.get('a.c/', data: 'Yessir', headers: {
+        'a': 'a',
+        'b': 'b',
+        'X-Huhle': 'Debuz',
+        'Accept': 'application/json',
+        'Content-Type': 'huhle/debuz'
+      }));
     });
 
     test('Serializer can modify headers in POST', () {
@@ -313,7 +388,13 @@ void main() {
         return 'Yessir';
       });
       r.post('Whateva', headers: {'b': 'b'});
-      verify(httpClient.post('a.c/', 'Yessir', headers: {'a': 'a', 'b': 'b', 'X-Huhle': 'Debuz', 'Accept': 'application/json', 'Content-Type': 'huhle/debuz'}));
+      verify(httpClient.post('a.c/', 'Yessir', headers: {
+        'a': 'a',
+        'b': 'b',
+        'X-Huhle': 'Debuz',
+        'Accept': 'application/json',
+        'Content-Type': 'huhle/debuz'
+      }));
     });
   });
 
@@ -323,7 +404,8 @@ void main() {
       var completer = Completer<Response>();
       var fut = completer.future;
 
-      var httpClient = successReturningHttpClient(respFactory: (Invocation i) => fut);
+      var httpClient =
+          successReturningHttpClient(respFactory: (Invocation i) => fut);
       var client = RestClient(httpClient, null, '/');
       var resp = client.get();
       expect(client.working, isTrue);
@@ -341,8 +423,11 @@ void main() {
       var fut2 = completer2.future;
 
       RestHttpClient httpClient = MockHttpClient();
-      when(httpClient.get(any, headers: anyNamed('headers'))).thenAnswer((_) => fut1);
-      when(httpClient.delete(any, data: anyNamed('data'), headers: anyNamed('headers'))).thenAnswer((_) => fut2);
+      when(httpClient.get(any, headers: anyNamed('headers')))
+          .thenAnswer((_) => fut1);
+      when(httpClient.delete(any,
+              data: anyNamed('data'), headers: anyNamed('headers')))
+          .thenAnswer((_) => fut2);
 
       var client = RestClient(httpClient, null, '/');
       var resp1 = client.get();
@@ -368,8 +453,11 @@ void main() {
       var fut2 = completer2.future;
 
       RestHttpClient httpClient = MockHttpClient();
-      when(httpClient.get(any, headers: anyNamed('headers'))).thenAnswer((_) => fut1);
-      when(httpClient.delete(any, data: anyNamed('data'), headers: anyNamed('headers'))).thenAnswer((_) => fut2);
+      when(httpClient.get(any, headers: anyNamed('headers')))
+          .thenAnswer((_) => fut1);
+      when(httpClient.delete(any,
+              data: anyNamed('data'), headers: anyNamed('headers')))
+          .thenAnswer((_) => fut2);
 
       var client = RestClient(httpClient, null, '/');
       var ch1 = client.child('/something');
@@ -406,7 +494,8 @@ void main() {
       var fut = completer.future;
 
       RestHttpClient httpClient = MockHttpClient();
-      when(httpClient.get(any, headers: anyNamed('headers'))).thenAnswer((_) => fut);
+      when(httpClient.get(any, headers: anyNamed('headers')))
+          .thenAnswer((_) => fut);
 
       var client = RestClient(httpClient, null, '/');
 
@@ -425,7 +514,8 @@ void main() {
   });
 }
 
-Future<Response> buildMockResponse(Invocation i, {int status, String body, List<int> binaryBody}) {
+Future<Response> buildMockResponse(Invocation i,
+    {int status, String body, List<int> binaryBody}) {
   status ??= 200;
   Response r;
   if (binaryBody != null) {
@@ -442,11 +532,18 @@ class MockHttpClient extends Mock implements RestHttpClient {}
 MockHttpClient successReturningHttpClient({ResponseFactory respFactory}) {
   var httpClient = MockHttpClient();
   respFactory ??= buildMockResponse;
-  when(httpClient.get(any, data: anyNamed('data'), headers: anyNamed('headers'))).thenAnswer(respFactory);
-  when(httpClient.delete(any, data: anyNamed('data'), headers: anyNamed('headers'))).thenAnswer(respFactory);
-  when(httpClient.post(any, any, headers: anyNamed('headers'))).thenAnswer(respFactory);
-  when(httpClient.put(any, any, headers: anyNamed('headers'))).thenAnswer(respFactory);
-  when(httpClient.head(any, headers: anyNamed('headers'))).thenAnswer(respFactory);
+  when(httpClient.get(any,
+          data: anyNamed('data'), headers: anyNamed('headers')))
+      .thenAnswer(respFactory);
+  when(httpClient.delete(any,
+          data: anyNamed('data'), headers: anyNamed('headers')))
+      .thenAnswer(respFactory);
+  when(httpClient.post(any, any, headers: anyNamed('headers')))
+      .thenAnswer(respFactory);
+  when(httpClient.put(any, any, headers: anyNamed('headers')))
+      .thenAnswer(respFactory);
+  when(httpClient.head(any, headers: anyNamed('headers')))
+      .thenAnswer(respFactory);
   return httpClient;
 }
 

@@ -6,7 +6,8 @@ import 'package:http/src/response.dart';
 
 ///
 /// Defines function which si able to take Dart objects and serialize them for upload (POST, PUT).
-typedef Serializer = dynamic Function(dynamic payload, Map<String, String> requestHeaders);
+typedef Serializer = dynamic Function(
+    dynamic payload, Map<String, String> requestHeaders);
 
 ///
 /// Defines function which is able to take HTTP response and deserialize, possibly into a Dart object.
@@ -30,11 +31,13 @@ class RestClient {
   Produces _produces;
   int _workingCount = 0;
 
-  final StreamController<bool> _workingStreamController = StreamController.broadcast();
+  final StreamController<bool> _workingStreamController =
+      StreamController.broadcast();
 
   Stream<bool> get workingStream => _workingStreamController.stream;
 
-  RestClient(RestHttpClient httpClient, RestClient parent, String url, {Map<String, String> headers}) {
+  RestClient(RestHttpClient httpClient, RestClient parent, String url,
+      {Map<String, String> headers}) {
     _parent = parent;
     var parsedUrl = parseUrl(url);
     _url = parsedUrl.url;
@@ -86,7 +89,8 @@ class RestClient {
     _includeContentTypeHeader(allHeaders);
     _workStarted();
     var requestPayload = effProduces.serialize(data, allHeaders);
-    var resp = _httpClient.get(renderUrl(url, params), data: requestPayload, headers: allHeaders);
+    var resp = _httpClient.get(renderUrl(url, params),
+        data: requestPayload, headers: allHeaders);
     return handleResponse(resp);
   }
 
@@ -96,7 +100,8 @@ class RestClient {
     _includeContentTypeHeader(headersToSend);
     _workStarted();
     var requestPayload = effProduces.serialize(data, headersToSend);
-    var resp = _httpClient.post(renderUrl(url, params), requestPayload, headers: headersToSend);
+    var resp = _httpClient.post(renderUrl(url, params), requestPayload,
+        headers: headersToSend);
     return handleResponse(resp);
   }
 
@@ -106,7 +111,8 @@ class RestClient {
     _includeContentTypeHeader(headersToSend);
     _workStarted();
     var requestPayload = effProduces.serialize(data, headersToSend);
-    var resp = _httpClient.put(renderUrl(url, params), requestPayload, headers: headersToSend);
+    var resp = _httpClient.put(renderUrl(url, params), requestPayload,
+        headers: headersToSend);
     return handleResponse(resp);
   }
 
@@ -116,7 +122,8 @@ class RestClient {
     _includeContentTypeHeader(allHeaders);
     _workStarted();
     var requestPayload = effProduces.serialize(data, allHeaders);
-    var resp = _httpClient.delete(renderUrl(url, params), data: requestPayload, headers: allHeaders);
+    var resp = _httpClient.delete(renderUrl(url, params),
+        data: requestPayload, headers: allHeaders);
     return handleResponse(resp);
   }
 
@@ -128,10 +135,14 @@ class RestClient {
     return handleResponse(resp);
   }
 
-  Future<RestResult> streamedRequest(String method, int contentLength, Stream uploadStream, {Map<String, String> headers}) {
+  Future<RestResult> streamedRequest(
+      String method, int contentLength, Stream uploadStream,
+      {Map<String, String> headers}) {
     var allHeaders = _headersToSend(headers);
     _workStarted();
-    var resp = _httpClient.streamedRequest(method, renderUrl(url, params), contentLength, uploadStream, headers: allHeaders);
+    var resp = _httpClient.streamedRequest(
+        method, renderUrl(url, params), contentLength, uploadStream,
+        headers: allHeaders);
     return handleResponse(resp);
   }
 
@@ -146,7 +157,8 @@ class RestClient {
     return processResponse(effAccepts, resp.whenComplete(_workCompleted));
   }
 
-  static Future<RestResult> processResponse(Accepts accepts, Future<Response> resp) async {
+  static Future<RestResult> processResponse(
+      Accepts accepts, Future<Response> resp) async {
     var r = await resp;
     dynamic data = accepts.deserialize(r);
     var result = RestResult(r.statusCode, data, r.headers);
@@ -172,7 +184,8 @@ class RestClient {
       // we are only interested into plain url without query parameters (we store these separately)
       var plain = parsed.replace(queryParameters: {}, query: null);
       var plainUrl = plain.toString();
-      if (plainUrl.endsWith('?')) plainUrl = plainUrl.substring(0, plainUrl.length - 1);
+      if (plainUrl.endsWith('?'))
+        plainUrl = plainUrl.substring(0, plainUrl.length - 1);
       return UrlParseResult(plainUrl, parsedParams);
     }
   }
@@ -337,11 +350,15 @@ class RestClient {
 ///
 abstract class RestHttpClient {
   Future<Response> get(String url, {dynamic data, Map<String, String> headers});
-  Future<Response> post(String url, dynamic data, {Map<String, String> headers});
+  Future<Response> post(String url, dynamic data,
+      {Map<String, String> headers});
   Future<Response> put(String url, dynamic data, {Map<String, String> headers});
-  Future<Response> delete(String url, {dynamic data, Map<String, String> headers});
+  Future<Response> delete(String url,
+      {dynamic data, Map<String, String> headers});
   Future<Response> head(String url, {Map<String, String> headers});
-  Future<Response> streamedRequest(String method, String url, int length, Stream uploadStream, {Map<String, String> headers});
+  Future<Response> streamedRequest(
+      String method, String url, int length, Stream uploadStream,
+      {Map<String, String> headers});
 }
 
 RegExp microRemoval = RegExp(r'\.[0-9]{0,6}');
@@ -373,7 +390,8 @@ Deserializer defaultJsonDeserializer = (Response response) {
 
 ///
 /// Uses JSON.encode(...) from dart:convert.
-Serializer defaultJsonSerializer = (dynamic payload, Map<String, String> requestHeaders) {
+Serializer defaultJsonSerializer =
+    (dynamic payload, Map<String, String> requestHeaders) {
   if (payload == null || (payload is String && payload.trim().isEmpty)) {
     return null;
   } else {
@@ -381,9 +399,11 @@ Serializer defaultJsonSerializer = (dynamic payload, Map<String, String> request
   }
 };
 
-Deserializer defaultBinaryDeserializer = (Response response) => response?.bodyBytes;
+Deserializer defaultBinaryDeserializer =
+    (Response response) => response?.bodyBytes;
 
-Serializer defaultBinarySerializer = (dynamic payload, Map<String, String> requestHeaders) => payload;
+Serializer defaultBinarySerializer =
+    (dynamic payload, Map<String, String> requestHeaders) => payload;
 
 class RestClientException implements Exception {
   final String message;
@@ -445,8 +465,10 @@ class HttpException {
 
   @override
   String toString() {
-    if (data == null) return 'HttpException{httpStatus: $httpStatus, data: $data}';
-    if ((data is String) && data.length < 1000) return 'HttpException{httpStatus: $httpStatus, data: $data}';
+    if (data == null)
+      return 'HttpException{httpStatus: $httpStatus, data: $data}';
+    if ((data is String) && data.length < 1000)
+      return 'HttpException{httpStatus: $httpStatus, data: $data}';
     return 'HttpException{httpStatus: $httpStatus}';
   }
 }
@@ -484,5 +506,6 @@ class Produces {
 
   Produces(this.mime, this.serializer);
 
-  dynamic serialize(dynamic payload, Map<String, String> requestHeaders) => serializer(payload, requestHeaders);
+  dynamic serialize(dynamic payload, Map<String, String> requestHeaders) =>
+      serializer(payload, requestHeaders);
 }

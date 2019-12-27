@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.5.0
+
+* pedantic linter
+
 ## 3.2.0
 
 * RestResult now allows you to access response headers.
