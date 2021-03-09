@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.0.0
+
+Maintenance release, mental preparation for null safe jump.
+
+
 ## 3.5.0
 
 * pedantic linter
