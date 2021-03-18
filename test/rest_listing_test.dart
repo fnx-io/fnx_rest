@@ -2,6 +2,8 @@ import 'package:fnx_rest/src/rest_client.dart';
 import 'package:fnx_rest/src/rest_listing.dart';
 import 'package:test/test.dart';
 
+import 'simple_rest_client_test.mocks.dart';
+
 void main() {
   group('SimpleListDriver', () {
     group('when unpacking data, should', () {
@@ -21,7 +23,7 @@ void main() {
     });
     group('when preparing client', () {
       test('include the page query parameter with given page', () {
-        var dummyClient = RestClient(null, null, '/');
+        var dummyClient = RestClient(MockRestHttpClient(), null, '/');
         var driver = SimpleListDriver();
         var c = driver.prepareClient(dummyClient, 10);
         expect(c.params['page'], equals('10'));

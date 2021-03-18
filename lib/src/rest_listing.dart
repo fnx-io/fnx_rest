@@ -9,23 +9,23 @@ import 'package:fnx_rest/src/rest_client.dart';
 /// It accepts [RestListingDriver] which handles paging for requests and unpacking
 /// final List of data from returned response
 class RestListing {
-  RestClient _rest;
+  RestClient? _rest;
 
   List<dynamic> list = [];
   int page = 0;
 
-  bool _hasNext = true;
+  bool? _hasNext = true;
   bool _finishedWithError = false;
   int _version = 0;
-  RestListingDriver _driver;
+  late RestListingDriver _driver;
 
   RestListing(RestClient restBase, RestListingDriver driver) {
     _rest = restBase.child('');
     _driver = driver;
   }
 
-  bool get working => _rest.working;
-  bool get hasNext => _hasNext;
+  bool get working => _rest!.working;
+  bool? get hasNext => _hasNext;
   bool get finishedWithError => _finishedWithError;
 
   /// Use this to indicate that next page should be loaded.
@@ -33,7 +33,7 @@ class RestListing {
     if (finishedWithError) {
       return false;
     }
-    if (working || !hasNext) {
+    if (working || !hasNext!) {
       return false;
     }
 
@@ -55,8 +55,8 @@ class RestListing {
       if (clearPrevious) {
         list.clear();
       }
-      if (data.data != null && data.data.isNotEmpty) {
-        list.addAll(data.data);
+      if (data.data != null && data.data!.isNotEmpty) {
+        list.addAll(data.data!);
       }
       _hasNext = data.hasNext;
 
@@ -79,7 +79,7 @@ class RestListing {
 
   // Does this listing have any items?
   bool isEmpty() {
-    return list == null || list.isEmpty;
+    return list.isEmpty;
   }
 }
 
@@ -90,14 +90,14 @@ abstract class RestListingDriver {
   UnpackedData unpackData(dynamic data);
 
   /// Configure rest client so that it will request given `page` of data
-  RestClient prepareClient(RestClient client, int page);
+  RestClient prepareClient(RestClient? client, int page);
 }
 
 /// Expects the API to return List of data directly in its response.
 class SimpleListDriver implements RestListingDriver {
   @override
-  RestClient prepareClient(RestClient client, int page) {
-    return queryParamPager(client, page);
+  RestClient prepareClient(RestClient? client, int page) {
+    return queryParamPager(client!, page);
   }
 
   @override
@@ -116,14 +116,14 @@ class SimpleListDriver implements RestListingDriver {
 /// the actual List of results
 class ListResultDriver implements RestListingDriver {
   @override
-  RestClient prepareClient(RestClient client, int page) {
-    return SimpleListDriver.queryParamPager(client, page);
+  RestClient prepareClient(RestClient? client, int page) {
+    return SimpleListDriver.queryParamPager(client!, page);
   }
 
   @override
   UnpackedData unpackData(dynamic data) {
     if (data is Map) {
-      if (data != null && data['data'] is! List) {
+      if (data['data'] is! List) {
         throw "Expected 'data' key to be a List, but was $data['data']";
       }
       List<dynamic> list = data['data'] ?? [];
@@ -137,8 +137,8 @@ class ListResultDriver implements RestListingDriver {
 /// Contains the data itself and flag whether we think (or know) that
 /// there is more data to fetch (next page)
 class UnpackedData {
-  final bool hasNext;
-  final List<dynamic> data;
+  final bool? hasNext;
+  final List<dynamic>? data;
 
   UnpackedData(this.hasNext, this.data);
 

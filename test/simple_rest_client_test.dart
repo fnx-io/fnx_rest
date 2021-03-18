@@ -2,8 +2,11 @@ import 'dart:async';
 
 import 'package:fnx_rest/src/rest_client.dart';
 import 'package:http/http.dart';
+import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
+
+import 'simple_rest_client_test.mocks.dart';
 
 List<int> binaryData = [
   0x48,
@@ -20,14 +23,13 @@ List<int> binaryData = [
   0x21
 ];
 
+@GenerateMocks([RestHttpClient])
 void main() {
-  var r = RestClient(null, null, 'a.c/', headers: {'a': 'a', 'b': 'b'});
+  var r = RestClient(MockRestHttpClient(), null, 'a.c/',
+      headers: {'a': 'a', 'b': 'b'});
   group('RestClient URL', () {
-    test('can be null', () {
-      expect(RestClient(null, null, null).url, equals(''));
-    });
     test('can be empty string', () {
-      expect(RestClient(null, null, '').url, equals(''));
+      expect(RestClient(MockRestHttpClient(), null, '').url, equals(''));
     });
     test("inherit parent's base", () {
       expect(r.child('/users').url, equals('a.c/users'));
@@ -36,14 +38,16 @@ void main() {
 
   group("RestClient's headers", () {
     test('can be null', () {
-      expect(RestClient(null, null, null, headers: null).headers, equals({}));
+      expect(RestClient(MockRestHttpClient(), null, '').headers, equals({}));
     });
     test('can be empty', () {
-      expect(RestClient(null, null, null, headers: {}).headers, equals({}));
+      expect(RestClient(MockRestHttpClient(), null, '', headers: {}).headers,
+          equals({}));
     });
     test('are preserved', () {
       expect(
-          RestClient(null, null, null, headers: {'b': 'b', 'c': 'c'}).headers,
+          RestClient(MockRestHttpClient(), null, '',
+              headers: {'b': 'b', 'c': 'c'}).headers,
           equals({'b': 'b', 'c': 'c'}));
     });
     test("are merged with parent's", () {
@@ -58,7 +62,7 @@ void main() {
 
   group('Parameters', () {
     test('are rememebered', () {
-      var rc = RestClient(null, null, null);
+      var rc = RestClient(MockRestHttpClient(), null, '');
       rc.setParam('a', 'b');
       rc.setParams('c', ['1', '2']);
 
@@ -67,7 +71,7 @@ void main() {
     });
 
     test('are type checked (sort-of)', () {
-      var rc = RestClient(null, null, null);
+      var rc = RestClient(MockRestHttpClient(), null, '');
       rc.setParams('a', ['1', '2']);
 
       expect(
@@ -77,21 +81,21 @@ void main() {
     test(
         'if single param accessed by getParams, it is converted to list automatically',
         () {
-      var rc = RestClient(null, null, null);
+      var rc = RestClient(MockRestHttpClient(), null, '');
       rc.setParam('a', 'b');
       expect(rc.getParams('a'), equals(['b']));
     });
 
     test('cannot be modified directly', () {
-      var rc = RestClient(null, null, null);
+      var rc = RestClient(MockRestHttpClient(), null, '');
       rc.setParams('a', ['b', 'c']);
-      var params = rc.getParams('a');
+      var params = rc.getParams('a')!;
       params.add('d');
       expect(rc.getParams('a'), equals(['b', 'c']));
     });
 
     test('are hierarchical', () {
-      var rc = RestClient(null, null, null);
+      var rc = RestClient(MockRestHttpClient(), null, '');
       rc.setParam('a', 'b');
       var ch = rc.child('/a');
       ch.setParam('c', 'd');
@@ -100,7 +104,7 @@ void main() {
     });
 
     test('child params do not overwrite parent params', () {
-      var rc = RestClient(null, null, null);
+      var rc = RestClient(MockRestHttpClient(), null, '');
       rc.setParam('a', 'b');
       var ch = rc.child('/a');
       ch.setParam('a', '1');
@@ -109,14 +113,16 @@ void main() {
     });
 
     test('are seeded from the url', () {
-      var rc = RestClient(null, null, '/something?is=wrong&1=2');
+      var rc =
+          RestClient(MockRestHttpClient(), null, '/something?is=wrong&1=2');
       expect(rc.getParam('is'), equals('wrong'));
       expect(rc.getParam('1'), equals('2'));
       expect(rc.url, equals('/something'));
     });
 
     test('for child urls are also seeded', () {
-      var rc = RestClient(null, null, '/something?is=wrong&1=2');
+      var rc =
+          RestClient(MockRestHttpClient(), null, '/something?is=wrong&1=2');
       var child = rc.child('/somewhere?is=good&becomes=better');
       expect(child.getParam('is'), equals('good'));
       expect(child.getParam('becomes'), equals('better'));
@@ -128,8 +134,8 @@ void main() {
       RestHttpClient client = successReturningHttpClient();
       var rc = RestClient(client, null, '/something?is=wrong&1=2');
       rc.setParam('3', '4');
-
       rc.get();
+
       verify(client.get('/something?is=wrong&1=2&3=4',
           headers: anyNamed('headers')));
     });
@@ -422,7 +428,7 @@ void main() {
       var fut1 = completer1.future;
       var fut2 = completer2.future;
 
-      RestHttpClient httpClient = MockHttpClient();
+      var httpClient = MockRestHttpClient();
       when(httpClient.get(any, headers: anyNamed('headers')))
           .thenAnswer((_) => fut1);
       when(httpClient.delete(any,
@@ -452,7 +458,7 @@ void main() {
       var fut1 = completer1.future;
       var fut2 = completer2.future;
 
-      RestHttpClient httpClient = MockHttpClient();
+      var httpClient = MockRestHttpClient();
       when(httpClient.get(any, headers: anyNamed('headers')))
           .thenAnswer((_) => fut1);
       when(httpClient.delete(any,
@@ -493,7 +499,7 @@ void main() {
       var completer = Completer<Response>();
       var fut = completer.future;
 
-      RestHttpClient httpClient = MockHttpClient();
+      var httpClient = MockRestHttpClient();
       when(httpClient.get(any, headers: anyNamed('headers')))
           .thenAnswer((_) => fut);
 
@@ -514,8 +520,8 @@ void main() {
   });
 }
 
-Future<Response> buildMockResponse(Invocation i,
-    {int status, String body, List<int> binaryBody}) {
+Future<Response> buildMockResponse(Invocation? i,
+    {int? status, String? body, List<int>? binaryBody}) {
   status ??= 200;
   Response r;
   if (binaryBody != null) {
@@ -527,10 +533,10 @@ Future<Response> buildMockResponse(Invocation i,
   return Future.value(r);
 }
 
-class MockHttpClient extends Mock implements RestHttpClient {}
+//class MockRestHttpClient extends Mock implements RestHttpClient {}
 
-MockHttpClient successReturningHttpClient({ResponseFactory respFactory}) {
-  var httpClient = MockHttpClient();
+MockRestHttpClient successReturningHttpClient({ResponseFactory? respFactory}) {
+  var httpClient = MockRestHttpClient();
   respFactory ??= buildMockResponse;
   when(httpClient.get(any,
           data: anyNamed('data'), headers: anyNamed('headers')))
