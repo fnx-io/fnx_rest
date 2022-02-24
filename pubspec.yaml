@@ -1,6 +1,6 @@
 name: fnx_rest
 description: Angular and Flutter friendly RestClient, which will make your communication with REST APIs much simpler.
-version: 4.0.1
+version: 4.1.0
 authors:
   - Tomucha <tomucha@gmail.com>
   - Jiri Zuna <jiri@zunovi.cz>

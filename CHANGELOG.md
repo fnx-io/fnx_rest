@@ -1,5 +1,8 @@
 # Changelog
 
+## 4.1.0
+
+Added PATCH method. *(facepalm)*
 
 ## 4.0.1
 

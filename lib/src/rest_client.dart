@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 
 import 'package:http/http.dart';
@@ -6,8 +7,7 @@ import 'package:http/src/response.dart';
 
 ///
 /// Defines function which si able to take Dart objects and serialize them for upload (POST, PUT).
-typedef Serializer = dynamic Function(
-    dynamic payload, Map<String, String> requestHeaders);
+typedef Serializer = dynamic Function(dynamic payload, Map<String, String> requestHeaders);
 
 ///
 /// Defines function which is able to take HTTP response and deserialize, possibly into a Dart object.
@@ -31,26 +31,24 @@ class RestClient {
   Produces? _produces;
   int _workingCount = 0;
 
-  final StreamController<bool> _workingStreamController =
-      StreamController.broadcast();
+  final StreamController<bool> _workingStreamController = StreamController.broadcast();
 
   Stream<bool> get workingStream => _workingStreamController.stream;
 
-  RestClient(RestHttpClient httpClient, RestClient? parent, String url,
-      {Map<String, String> headers = const {}}) {
+  RestClient(RestHttpClient httpClient, RestClient? parent, String url, {Map<String, String>? headers}) {
     _parent = parent;
     var parsedUrl = parseUrl(url);
     _url = parsedUrl.url;
     _params = parsedUrl.params;
     _httpClient = httpClient;
-    _headers = headers;
+    _headers = headers ?? HashMap<String, String>();
     if (parent == null) {
       accepts('application/json', defaultJsonDeserializer);
       produces('application/json', defaultJsonSerializer);
     }
   }
 
-  RestClient child(String urlPart, {Map<String, String> headers = const {}}) {
+  RestClient child(String urlPart, {Map<String, String>? headers}) {
     return RestClient(_httpClient, this, urlPart, headers: headers);
   }
 
@@ -83,69 +81,67 @@ class RestClient {
   }
 
   /// HTTP get with optional additional headers and optional body.
-  Future<RestResult> get(
-      {dynamic data, Map<String, String> headers = const {}}) {
-    var allHeaders = _headersToSend(headers);
+  Future<RestResult> get({dynamic data, Map<String, String>? headers}) {
+    var allHeaders = _headersToSend(headers ?? HashMap<String, String>());
     _addContentTypeHeader(allHeaders);
     _workStarted();
     var requestPayload = effProduces!.serialize(data, allHeaders);
-    var resp = _httpClient.get(renderUrl(url, params),
-        data: requestPayload, headers: allHeaders);
+    var resp = _httpClient.get(renderUrl(url, params), data: requestPayload, headers: allHeaders);
     return handleResponse(resp);
   }
 
   /// HTTP POST with optional additional headers. Data will be processed using configured [Serializer], JSON.encode(...) by default.
-  Future<RestResult> post(dynamic data,
-      {Map<String, String> headers = const {}}) {
-    var headersToSend = _headersToSend(headers);
+  Future<RestResult> post(dynamic data, {Map<String, String>? headers}) {
+    var headersToSend = _headersToSend(headers ?? HashMap<String, String>());
     _addContentTypeHeader(headersToSend);
     _workStarted();
     var requestPayload = effProduces!.serialize(data, headersToSend);
-    var resp = _httpClient.post(renderUrl(url, params), requestPayload,
-        headers: headersToSend);
+    var resp = _httpClient.post(renderUrl(url, params), requestPayload, headers: headersToSend);
+    return handleResponse(resp);
+  }
+
+  /// HTTP POST with optional additional headers. Data will be processed using configured [Serializer], JSON.encode(...) by default.
+  Future<RestResult> patch(dynamic data, {Map<String, String>? headers}) {
+    var headersToSend = _headersToSend(headers ?? HashMap<String, String>());
+    _addContentTypeHeader(headersToSend);
+    _workStarted();
+    var requestPayload = effProduces!.serialize(data, headersToSend);
+    var resp = _httpClient.patch(renderUrl(url, params), requestPayload, headers: headersToSend);
     return handleResponse(resp);
   }
 
   /// HTTP PUT with optional additional headers. Data will be processed using configured [Serializer], JSON.encode(...) by default.
-  Future<RestResult> put(dynamic data,
-      {Map<String, String> headers = const {}}) {
-    var headersToSend = _headersToSend(headers);
+  Future<RestResult> put(dynamic data, {Map<String, String>? headers}) {
+    var headersToSend = _headersToSend(headers ?? HashMap<String, String>());
     _addContentTypeHeader(headersToSend);
     _workStarted();
     var requestPayload = effProduces!.serialize(data, headersToSend);
-    var resp = _httpClient.put(renderUrl(url, params), requestPayload,
-        headers: headersToSend);
+    var resp = _httpClient.put(renderUrl(url, params), requestPayload, headers: headersToSend);
     return handleResponse(resp);
   }
 
   /// HTTP DELETE with optional additional headers and optional body
-  Future<RestResult> delete(
-      {dynamic data, Map<String, String> headers = const {}}) {
-    var allHeaders = _headersToSend(headers);
+  Future<RestResult> delete({dynamic data, Map<String, String>? headers}) {
+    var allHeaders = _headersToSend(headers ?? HashMap<String, String>());
     _addContentTypeHeader(allHeaders);
     _workStarted();
     var requestPayload = effProduces!.serialize(data, allHeaders);
-    var resp = _httpClient.delete(renderUrl(url, params),
-        data: requestPayload, headers: allHeaders);
+    var resp = _httpClient.delete(renderUrl(url, params), data: requestPayload, headers: allHeaders);
     return handleResponse(resp);
   }
 
   /// HTTP HEAD with optional additional headers.
-  Future<RestResult> head({Map<String, String> headers = const {}}) {
-    var allHeaders = _headersToSend(headers);
+  Future<RestResult> head({Map<String, String>? headers}) {
+    var allHeaders = _headersToSend(headers ?? HashMap<String, String>());
     _workStarted();
     var resp = _httpClient.head(renderUrl(url, params), headers: allHeaders);
     return handleResponse(resp);
   }
 
-  Future<RestResult> streamedRequest(
-      String method, int contentLength, Stream uploadStream,
-      {required Map<String, String> headers}) {
+  Future<RestResult> streamedRequest(String method, int contentLength, Stream uploadStream, {required Map<String, String> headers}) {
     var allHeaders = _headersToSend(headers);
     _workStarted();
-    var resp = _httpClient.streamedRequest(
-        method, renderUrl(url, params), contentLength, uploadStream,
-        headers: allHeaders);
+    var resp = _httpClient.streamedRequest(method, renderUrl(url, params), contentLength, uploadStream, headers: allHeaders);
     return handleResponse(resp);
   }
 
@@ -161,8 +157,7 @@ class RestClient {
     return processResponse(effAccepts!, resp.whenComplete(_workCompleted));
   }
 
-  static Future<RestResult> processResponse(
-      Accepts accepts, Future<Response> resp) async {
+  static Future<RestResult> processResponse(Accepts accepts, Future<Response> resp) async {
     var r = await resp;
     dynamic data = accepts.deserialize(r);
     var result = RestResult(r.statusCode, data, r.headers);
@@ -353,18 +348,13 @@ class RestClient {
 /// On server, for example. See [RestClient].
 ///
 abstract class RestHttpClient {
-  Future<Response> get(String url,
-      {dynamic data, Map<String, String>? headers});
-  Future<Response> post(String url, dynamic data,
-      {Map<String, String>? headers});
-  Future<Response> put(String url, dynamic data,
-      {Map<String, String>? headers});
-  Future<Response> delete(String url,
-      {dynamic data, Map<String, String>? headers});
+  Future<Response> get(String url, {dynamic data, Map<String, String>? headers});
+  Future<Response> post(String url, dynamic data, {Map<String, String>? headers});
+  Future<Response> put(String url, dynamic data, {Map<String, String>? headers});
+  Future<Response> delete(String url, {dynamic data, Map<String, String>? headers});
   Future<Response> head(String url, {Map<String, String>? headers});
-  Future<Response> streamedRequest(
-      String method, String url, int length, Stream uploadStream,
-      {Map<String, String>? headers});
+  Future<Response> patch(String url, dynamic data, {Map<String, String> headers});
+  Future<Response> streamedRequest(String method, String url, int length, Stream uploadStream, {Map<String, String>? headers});
 }
 
 RegExp microRemoval = RegExp(r'\.[0-9]{0,6}');
@@ -394,8 +384,7 @@ Deserializer defaultJsonDeserializer = (Response response) {
 
 ///
 /// Uses JSON.encode(...) from dart:convert.
-Serializer defaultJsonSerializer =
-    (dynamic payload, Map<String, String> requestHeaders) {
+Serializer defaultJsonSerializer = (dynamic payload, Map<String, String> requestHeaders) {
   if (payload == null || (payload is String && payload.trim().isEmpty)) {
     return null;
   } else {
@@ -403,11 +392,9 @@ Serializer defaultJsonSerializer =
   }
 };
 
-Deserializer defaultBinaryDeserializer =
-    (Response response) => response.bodyBytes;
+Deserializer defaultBinaryDeserializer = (Response response) => response.bodyBytes;
 
-Serializer defaultBinarySerializer =
-    (dynamic payload, Map<String, String> requestHeaders) => payload;
+Serializer defaultBinarySerializer = (dynamic payload, Map<String, String> requestHeaders) => payload;
 
 class RestClientException implements Exception {
   final String message;
@@ -469,10 +456,8 @@ class HttpException {
 
   @override
   String toString() {
-    if (data == null)
-      return 'HttpException{httpStatus: $httpStatus, data: $data}';
-    if ((data is String) && data.length < 1000)
-      return 'HttpException{httpStatus: $httpStatus, data: $data}';
+    if (data == null) return 'HttpException{httpStatus: $httpStatus, data: $data}';
+    if ((data is String) && data.length < 1000) return 'HttpException{httpStatus: $httpStatus, data: $data}';
     return 'HttpException{httpStatus: $httpStatus}';
   }
 }
@@ -509,6 +494,5 @@ class Produces {
 
   Produces(this.mime, this.serializer);
 
-  dynamic serialize(dynamic payload, Map<String, String> requestHeaders) =>
-      serializer(payload, requestHeaders);
+  dynamic serialize(dynamic payload, Map<String, String> requestHeaders) => serializer(payload, requestHeaders);
 }
