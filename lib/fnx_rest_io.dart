@@ -12,6 +12,7 @@
 library fnx_rest;
 
 import 'dart:async';
+import 'dart:io';
 
 import 'package:http/http.dart';
 import 'package:http/io_client.dart';
@@ -24,27 +25,34 @@ export 'src/rest_client.dart';
 export 'src/rest_listing.dart';
 
 class IoRestClient extends RestClient {
-  IoRestClient.root(String url) : this(null, url);
-  IoRestClient(RestClient? parent, String url) : super(IOHttpClient(), parent, url);
+  IoRestClient.root(String url, [HttpClient? inner]) : this(null, url, inner);
+  IoRestClient(RestClient? parent, String url, [HttpClient? inner])
+      : super(IOHttpClient(inner), parent, url);
 }
 
 class IOHttpClient extends RestHttpClient {
-  final IOClient _client = IOClient();
+  final IOClient _client;
+
+  IOHttpClient([HttpClient? inner]) : _client = IOClient(inner);
 
   @override
-  Future<Response> get(String url, {dynamic data, Map<String, String>? headers}) async {
+  Future<Response> get(String url,
+      {dynamic data, Map<String, String>? headers}) async {
     var request = _createRequest('GET', url, data, headers);
     return Response.fromStream(await _client.send(request));
   }
 
   @override
-  Future<Response> delete(String url, {dynamic data, Map<String, String>? headers}) async {
+  Future<Response> delete(String url,
+      {dynamic data, Map<String, String>? headers}) async {
     var request = _createRequest('DELETE', url, data, headers);
     return Response.fromStream(await _client.send(request));
   }
 
   @override
-  Future<Response> streamedRequest(String method, String url, int length, Stream uploadStream, {Map<String, String>? headers}) async {
+  Future<Response> streamedRequest(
+      String method, String url, int length, Stream uploadStream,
+      {Map<String, String>? headers}) async {
     StreamSubscription? subscription;
     try {
       var request = StreamedRequest(method, Uri.parse(url));
@@ -52,7 +60,8 @@ class IOHttpClient extends RestHttpClient {
       if (headers != null) {
         request.headers.addAll(headers);
       }
-      subscription = uploadStream.listen(request.sink.add as void Function(dynamic)?, onDone: () {
+      subscription = uploadStream
+          .listen(request.sink.add as void Function(dynamic)?, onDone: () {
         request.sink.close();
         subscription!.cancel();
       });
@@ -82,7 +91,8 @@ class IOHttpClient extends RestHttpClient {
     return _client.patch(Uri.parse(url), body: data, headers: headers);
   }
 
-  Request _createRequest(String method, String url, dynamic data, Map<String, String>? headers) {
+  Request _createRequest(
+      String method, String url, dynamic data, Map<String, String>? headers) {
     var request = Request(method, Uri.parse(url));
     if (headers != null) {
       request.headers.addAll(headers);

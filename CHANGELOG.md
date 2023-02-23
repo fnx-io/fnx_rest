@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.1.1
+
+Added optional "HttpClient? inner" parametr for IoRestClient, allowing user to specify details of the http client (mainly proxy, but possibly low-level TCP/IP settings etc).
+
 ## 4.1.0
 
 Added PATCH method. *(facepalm)*
@@ -25,14 +29,14 @@ Maintenance release, mental preparation for null safe jump.
 
 * serializers can now modify outgoing headers
 * HTTP methods (get, post, ...) never throw a HttpException,
-    not even with 500 http status response
-* method RestResult.assertSuccess() when you are not interested in response body (successData)        
+  not even with 500 http status response
+* method RestResult.assertSuccess() when you are not interested in response body (successData)
 
 ## 3.0.0
 
 * More flexible serializers and deserializers. (_Breaking api change if you implement your own custom serializers or deserializers_)
 * Added `urlWithParams` getter for simpler access to url rendered with parameters
-* Default json de/serializers now not throw on whitespace string  
+* Default json de/serializers now not throw on whitespace string
 * Updated readme
 
 ## 2.2.0
